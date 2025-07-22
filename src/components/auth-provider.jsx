@@ -16,17 +16,23 @@ export function AuthProvider({ children }) {
 
   const checkAuthStatus = async () => {
     try {
-      // AccessToken은 HttpOnly 쿠키로 자동 전송됨
       const userData = await authAPI.getCurrentUser()
-      console.log("Current user data:", userData) // 디버깅용
-      setUser(userData)
-    } catch (error) {
-      console.log("Auth check failed, checking test accounts...")
-      // 백엔드가 없을 경우 로컬 스토리지 확인
-      const savedUser = localStorage.getItem("dev-user")
-      if (savedUser) {
-        setUser(JSON.parse(savedUser))
+      if (userData) {
+        console.log("✅ 로그인된 사용자:", userData.username)
+        setUser(userData)
+      } else {
+        // 백엔드가 없을 경우 로컬 스토리지 확인
+        const savedUser = localStorage.getItem("dev-user")
+        if (savedUser) {
+          console.log("💾 개발 모드: 로컬 스토리지에서 사용자 정보 복원")
+          setUser(JSON.parse(savedUser))
+        }
       }
+    } catch (error) {
+      if (error.message !== "Unauthorized") {
+        console.error("❌ 인증 상태 확인 중 오류 발생:", error)
+      }
+      setUser(null)
     } finally {
       setIsLoading(false)
     }

@@ -8,7 +8,7 @@ const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`
 
   const defaultOptions = {
-    credentials: "include", // 쿠키 자동 전송을 위해 필수
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
@@ -20,6 +20,12 @@ const apiRequest = async (endpoint, options = {}) => {
   try {
     const response = await fetch(url, defaultOptions)
     
+    // 401 에러는 조용히 처리
+    if (response.status === 401) {
+      console.log("🔒 로그인이 필요한 서비스입니다.")
+      throw new Error("Unauthorized")
+    }
+
     // 응답의 Content-Type 헤더 확인
     const contentType = response.headers.get("content-type")
 
@@ -48,10 +54,16 @@ const apiRequest = async (endpoint, options = {}) => {
       status: response.status
     }
   } catch (error) {
+    if (error.message === "Unauthorized") {
+      throw error
+    }
     console.error("API request failed:", error)
     throw error
   }
 }
+
+// 로그 상태를 추적하기 위한 변수
+let isAuthChecked = false;
 
 // 인증 관련 API
 export const authAPI = {
@@ -103,6 +115,7 @@ export const authAPI = {
         method: "POST",
       })
       // HttpOnly 쿠키는 서버에서 제거됨
+      isAuthChecked = false // 로그아웃 시 상태 초기화
     } catch (error) {
       console.error("Logout failed:", error)
       throw error
@@ -113,10 +126,17 @@ export const authAPI = {
   getCurrentUser: async () => {
     try {
       const response = await apiRequest("/auth/me")
+      if (!response.success && !isAuthChecked) {
+        console.log("👤 현재 비로그인 상태입니다.")
+        isAuthChecked = true
+      }
       return response.data
     } catch (error) {
-      console.error("Failed to get current user:", error)
-      throw error
+      if (!isAuthChecked) {
+        console.log("👤 현재 비로그인 상태입니다.")
+        isAuthChecked = true
+      }
+      return null
     }
   },
 
