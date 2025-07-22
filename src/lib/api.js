@@ -69,28 +69,31 @@ export const authAPI = {
   },
 }
 
-// 테스트 관련 API
+// 테스트 관련 API (수정함)
 export const testAPI = {
   saveTestResult: async (testData) => {
     try {
-      return await apiRequest("/test/save", {
+      const response = await apiRequest("/test/save", {
         method: "POST",
         body: JSON.stringify(testData),
-      })
-    } catch (error) {
-      console.log("Backend API not available, saving to localStorage (dev mode)...")
+      });
 
-      // 로컬 스토리지에 저장 (개발용)
-      const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]")
+      // 백엔드 응답: { testId: 123 }
+      return response; // { testId: ... } 형태 그대로 반환
+    } catch (error) {
+      console.log("Backend API not available, saving to localStorage (dev mode)...");
+
+      const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
       const newResult = {
-        id: Date.now().toString(),
+        id: Date.now().toString(), // testId 대신
         ...testData,
         completedAt: testData.completedAt || new Date().toISOString(),
-      }
-      history.unshift(newResult) // 최신 결과가 맨 앞으로 오도록
-      localStorage.setItem("dev-test-history", JSON.stringify(history))
+      };
+      history.unshift(newResult);
+      localStorage.setItem("dev-test-history", JSON.stringify(history));
 
-      return { success: true, result: newResult }
+      // 백엔드 구조와 동일하게 맞춰서 testId처럼 반환
+      return { testId: newResult.id };
     }
   },
 
@@ -116,4 +119,5 @@ export const testAPI = {
       return MOCK_RECOMMENDATIONS[personality] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"]
     }
   },
+  
 }
