@@ -1,17 +1,17 @@
 // API 호출을 위한 기본 설정
-// Vite 환경 변수는 import.meta.env.VITE_ 접두사를 사용합니다.
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
 
-import { MOCK_RECOMMENDATIONS } from "./mock-data" // 상대 경로로 변경
+import { MOCK_RECOMMENDATIONS } from "./mock-data"
 
 // 기본 fetch 설정
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`
 
   const defaultOptions = {
-    credentials: "include", // 쿠키 자동 전송
+    credentials: "include", // 쿠키 자동 전송을 위해 필수
     headers: {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       ...options.headers,
     },
     ...options,
@@ -19,14 +19,34 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(url, defaultOptions)
+    
+    // 응답의 Content-Type 헤더 확인
+    const contentType = response.headers.get("content-type")
 
     if (!response.ok) {
-      // HTTP 에러 발생 시 에러 메시지 포함
-      const errorData = await response.json().catch(() => ({ message: response.statusText }))
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || "Unknown error"}`)
+      let errorMessage = response.statusText
+      if (contentType?.includes("application/json")) {
+        const errorData = await response.json()
+        errorMessage = errorData.message || errorMessage
+      }
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorMessage}`)
     }
 
-    return await response.json()
+    // 응답이 비어있거나 JSON이 아닌 경우 처리
+    if (!contentType || !contentType.includes("application/json")) {
+      return {
+        success: true,
+        status: response.status
+      }
+    }
+
+    // JSON 응답 파싱
+    const data = await response.json()
+    return {
+      success: true,
+      data,
+      status: response.status
+    }
   } catch (error) {
     console.error("API request failed:", error)
     throw error
@@ -36,11 +56,30 @@ const apiRequest = async (endpoint, options = {}) => {
 // 인증 관련 API
 export const authAPI = {
   // 로그인
-  login: async (email, password) => {
-    return apiRequest("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    })
+  login: async (accountId, password) => {
+    try {
+      const response = await apiRequest("/login", {
+        method: "POST",
+        body: JSON.stringify({ accountId, password }),
+      })
+
+      // 로그인 성공 시 바로 사용자 정보 조회
+      if (response.success) {
+        const userData = await apiRequest("/auth/me")
+        return {
+          success: true,
+          user: userData.data
+        }
+      }
+
+      return response
+    } catch (error) {
+      console.error("Login failed:", error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
   },
 
   // 회원가입
@@ -53,19 +92,37 @@ export const authAPI = {
 
   // 로그아웃
   logout: async () => {
-    return apiRequest("/auth/logout", {
-      method: "POST",
-    })
+    try {
+      await apiRequest("/auth/logout", {
+        method: "POST",
+      })
+      // HttpOnly 쿠키는 서버에서 제거됨
+    } catch (error) {
+      console.error("Logout failed:", error)
+      throw error
+    }
   },
 
   // 현재 사용자 정보 조회
   getCurrentUser: async () => {
-    return apiRequest("/auth/me")
+    try {
+      const response = await apiRequest("/auth/me")
+      return response.data
+    } catch (error) {
+      console.error("Failed to get current user:", error)
+      throw error
+    }
   },
 
   // 토큰 검증
   validateToken: async () => {
-    return apiRequest("/auth/validate")
+    try {
+      const response = await apiRequest("/auth/validate")
+      return response.data
+    } catch (error) {
+      console.error("Token validation failed:", error)
+      throw error
+    }
   },
 }
 

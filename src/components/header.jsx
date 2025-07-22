@@ -24,7 +24,7 @@ export function Header() {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <span className="text-sm text-muted-foreground">안녕하세요, {user.name}님</span>
+              <span className="text-sm text-muted-foreground">안녕하세요, {user.username}님</span>
               <Link to="/mypage">
                 <Button variant="outline" size="sm">
                   마이페이지

@@ -14,7 +14,7 @@ import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
 
 export default function RegisterPage() {
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("") // email 대신 username으로 변경
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -46,7 +46,7 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      const success = await register(name, email, password)
+      const success = await register(name, username, password) // email 대신 username 전달
       if (success) {
         toast({
           title: "회원가입 성공",
@@ -102,13 +102,13 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">이메일</Label>
+                  <Label htmlFor="username">아이디</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="example@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="username"
+                    type="text"
+                    placeholder="사용할 아이디를 입력하세요"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     required
                   />
                 </div>
