@@ -83,11 +83,17 @@ export const authAPI = {
   },
 
   // 회원가입
-  register: async (name, email, password) => {
-    return apiRequest("/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ name, email, password }),
-    })
+  register: async (username, accountId, password) => {
+    try {
+      const response = await apiRequest("/auth/join", {
+        method: "POST",
+        body: JSON.stringify({ username, accountId, password }),
+      })
+      return response
+    } catch (error) {
+      console.error("Register failed:", error)
+      throw error
+    }
   },
 
   // 로그아웃
@@ -121,6 +127,19 @@ export const authAPI = {
       return response.data
     } catch (error) {
       console.error("Token validation failed:", error)
+      throw error
+    }
+  },
+
+  // 아이디 중복 확인
+  checkAccountId: async (accountId) => {
+    try {
+      const response = await apiRequest(`/auth/duplicate?accountId=${encodeURIComponent(accountId)}`, {
+        method: "GET"
+      })
+      return response
+    } catch (error) {
+      console.error("AccountId check failed:", error)
       throw error
     }
   },
