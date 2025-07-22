@@ -77,51 +77,54 @@ export default function TestPage() {
     }
   }
 
+  // 테스트 결과 제출 (수정함)
   const handleSubmit = async () => {
-    setIsSubmitting(true)
+  setIsSubmitting(true)
 
-    try {
-      // 점수 계산 로직
-      const totalScore = Object.values(answers).reduce((sum, score) => sum + score, 0)
-      const averageScore = totalScore / questions.length
+  try {
+    const totalScore = Object.values(answers).reduce((sum, score) => sum + score, 0)
+    const averageScore = totalScore / questions.length
 
-      let personality = ""
-      if (averageScore >= 4) {
-        personality = "외향적 리더형"
-      } else if (averageScore >= 3) {
-        personality = "균형잡힌 분석형"
-      } else {
-        personality = "신중한 사색형"
-      }
-
-      // 백엔드에 테스트 결과 저장
-      const testResult = {
-        personality,
-        score: averageScore,
-        answers,
-        completedAt: new Date().toISOString(),
-      }
-
-      await testAPI.saveTestResult(testResult)
-
-      // 결과 페이지로 이동 (결과는 백엔드에서 조회)
-      navigate("/result") // router.push 대신 navigate 사용
-
-      toast({
-        title: "테스트 완료",
-        description: "결과를 확인해보세요!",
-      })
-    } catch (error) {
-      console.error("Test submission failed:", error)
-      toast({
-        title: "오류",
-        description: "테스트 결과 저장 중 오류가 발생했습니다.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
+    let personality = ""
+    if (averageScore >= 4) {
+      personality = "외향적 리더형"
+    } else if (averageScore >= 3) {
+      personality = "균형잡힌 분석형"
+    } else {
+      personality = "신중한 사색형"
     }
+
+    const testResult = {
+      userId: user.id, // 반드시 존재해야 함
+      userType: personality,
+      typeDescription: "당신은 " + personality + " 성향입니다.",
+      completedAt: new Date().toISOString()
+    }
+
+    // 백엔드에 저장 + testId 응답 받기
+    const response = await testAPI.saveTestResult(testResult)
+    // console.log("백엔드 응답:", response);
+    const testId = response.testId
+
+    // 결과 페이지로 이동 (testId 넘기기)
+    navigate(`/result?testId=${testId}`)
+
+    toast({
+      title: "테스트 완료",
+      description: "결과를 확인해보세요!",
+    })
+  } catch (error) {
+    console.error("Test submission failed:", error)
+    toast({
+      title: "오류",
+      description: "테스트 결과 저장 중 오류가 발생했습니다.",
+      variant: "destructive",
+    })
+  } finally {
+    setIsSubmitting(false)
   }
+}
+
 
   const progress = ((currentQuestion + 1) / questions.length) * 100
   const isAnswered = answers[currentQuestion] !== undefined
