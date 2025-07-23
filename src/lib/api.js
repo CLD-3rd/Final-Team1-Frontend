@@ -96,18 +96,22 @@ export const testAPI = {
       return { testId: newResult.id };
     }
   },
+  
+// 테스트 히스토리 조회 (수정)
+  getTestHistory: async (userId) => {
+  try {
+    return await apiRequest(`/test/history?userId=${userId}`); 
+  } catch (error) {
+    console.log("Backend API not available, using localStorage (dev mode)...");
 
-  getTestHistory: async () => {
-    try {
-      return await apiRequest("/test/history")
-    } catch (error) {
-      console.log("Backend API not available, using localStorage (dev mode)...")
+    // 로컬 스토리지에서 조회 (개발용)
+    const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
+    // userId로 필터링 (userId가 저장되어 있다면)
+    return history.filter(item => item.userId === userId);
+  }
+},
 
-      // 로컬 스토리지에서 조회 (개발용)
-      const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]")
-      return history
-    }
-  },
+
 
   getRecommendations: async (personality) => {
     try {
