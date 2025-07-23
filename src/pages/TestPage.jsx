@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group" // 상대 경로로 변경
 import { Label } from "../components/ui/label" // 상대 경로로 변경
 import { Progress } from "../components/ui/progress" // 상대 경로로 변경
-import { testAPI } from "../lib/api" // 상대 경로로 변경
+import { testAPI, contentAPI } from "../lib/api" // 상대 경로로 변경
 import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
 
 const questions = [
@@ -103,8 +103,11 @@ export default function TestPage() {
 
     // 백엔드에 저장 + testId 응답 받기
     const response = await testAPI.saveTestResult(testResult)
-    // console.log("백엔드 응답:", response);
+    console.log("백엔드 응답:", response);
+    //gemini 백엔드로 testid보내기
+  
     const testId = response.testId
+    const recommendation = await contentAPI.requestRecommendation(testId)
 
     // 결과 페이지로 이동 (testId 넘기기)
     navigate(`/result?testId=${testId}`)

@@ -1,6 +1,8 @@
 // API 호출을 위한 기본 설정
 // Vite 환경 변수는 import.meta.env.VITE_ 접두사를 사용합니다.
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
+const CONTENT_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8081/api"
+
 
 import { MOCK_RECOMMENDATIONS } from "./mock-data" // 상대 경로로 변경
 
@@ -32,6 +34,30 @@ const apiRequest = async (endpoint, options = {}) => {
     throw error
   }
 }
+
+
+// 컨텐츠 서버용 요청 --------------
+// 8081 content 서버용 요청 함수 추가
+const contentApiRequest = async (endpoint, options = {}) => {
+  const url = `${CONTENT_SERVER_BASE_URL}${endpoint}`;
+
+  const defaultOptions = {
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...options.headers },
+    ...options,
+  };
+
+  const response = await fetch(url, defaultOptions);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || "Unknown error"}`);
+  }
+
+  return await response.json();
+};
+
+//---------------------------------------------
 
 // 인증 관련 API
 export const authAPI = {
@@ -120,4 +146,19 @@ export const testAPI = {
     }
   },
   
+}
+
+
+// 컨텐츠 서버(Gemini) API - content 서버 호출
+export const contentAPI = {
+  requestRecommendation: async (testId) => {
+    try {
+      return await contentApiRequest(`/gemini/recommend?testId=${testId}`, {
+        method: "POST",
+      })
+    } catch (error) {
+      console.log("Recommendation API 호출 실패:", error)
+      throw error
+    }
+  },
 }
