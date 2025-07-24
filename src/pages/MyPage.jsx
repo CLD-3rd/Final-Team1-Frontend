@@ -35,7 +35,7 @@ export default function MyPage() {
   // 마이페이지 컨텐츠 히스토리 (수정)
 const fetchTestHistory = async () => {
   try {
-    const historyData = await testAPI.getTestHistory(user.id);
+    const historyData = await testAPI.getTestResultHistory(user.id);
     console.log("API 응답 데이터:", historyData);
     setHistory(historyData);
   } catch (error) {

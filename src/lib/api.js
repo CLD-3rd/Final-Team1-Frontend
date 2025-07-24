@@ -220,7 +220,7 @@ export const testAPI = {
 
 
 // 테스트 히스토리 조회 (수정)
-  getTestHistory: async (userId) => {
+  getTestResultHistory: async (userId) => {
   try {
     //return await apiRequest(`/test/history/result?userId=${userId}`); 
     return await apiRequest(`/test/history?userId=${userId}`); 
