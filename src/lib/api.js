@@ -96,7 +96,8 @@ export const testAPI = {
       return { testId: newResult.id };
     }
   },
-  
+
+
 // 테스트 히스토리 조회 (수정)
   getTestHistory: async (userId) => {
   try {
@@ -113,15 +114,16 @@ export const testAPI = {
 
 
 
-  getRecommendations: async (personality) => {
+  getRecommendations: async (personalityOrUserType) => {
     try {
-      return await apiRequest(`/recommendations/${personality}`)
+      return await apiRequest(`/recommendations/${personalityOrUserType}`)
     } catch (error) {
       console.log("Backend API not available, using mock data (dev mode)...")
 
-      // 목업 데이터 반환 (개발용)
-      return MOCK_RECOMMENDATIONS[personality] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"]
+      // personalityOrUserType이 없으면 기본값 사용
+      const key = personalityOrUserType || "균형잡힌 분석형";
+      return MOCK_RECOMMENDATIONS[key] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"];
     }
   },
-  
+    
 }

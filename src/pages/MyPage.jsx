@@ -139,7 +139,7 @@ const fetchTestHistory = async () => {
                           <p className="font-semibold">{item.userType}</p> {/*personality -> 수정: userType 사용 */}
                           <p className="text-sm text-gray-500">{formatDate(item.createdAt)}</p> {/* item.completedAt -> 수정: createdAt 사용 */}
                           {/* <p className="text-sm text-gray-600">점수: {item.score.toFixed(1)}점</p> */}
-                          <p className="text-sm text-gray-600">점수: {typeof item.score === "number" ? item.score.toFixed(1) : "-"}점</p>
+                          {/* <p className="text-sm text-gray-600">점수: {typeof item.score === "number" ? item.score.toFixed(1) : "-"}점</p> */}
                         </div>
                         <Button variant="outline" size="sm">
                           상세보기

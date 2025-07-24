@@ -87,11 +87,13 @@ export default function TestPage() {
 
     let personality = ""
     if (averageScore >= 4) {
-      personality = "외향적 리더형"
+      personality = "D"
     } else if (averageScore >= 3) {
-      personality = "균형잡힌 분석형"
+      personality = "I"
+    } else if (averageScore >= 2) {
+      personality = "S"
     } else {
-      personality = "신중한 사색형"
+      personality = "C"
     }
 
     const testResult = {
