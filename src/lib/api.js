@@ -1,19 +1,19 @@
 // API 호출을 위한 기본 설정
-// Vite 환경 변수는 import.meta.env.VITE_ 접두사를 사용합니다.
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
 const CONTENT_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8081/api"
 
 
-import { MOCK_RECOMMENDATIONS } from "./mock-data" // 상대 경로로 변경
+import { MOCK_RECOMMENDATIONS } from "./mock-data"
 
 // 기본 fetch 설정
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`
 
   const defaultOptions = {
-    credentials: "include", // 쿠키 자동 전송
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       ...options.headers,
     },
     ...options,
@@ -21,15 +21,44 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(url, defaultOptions)
-
-    if (!response.ok) {
-      // HTTP 에러 발생 시 에러 메시지 포함
-      const errorData = await response.json().catch(() => ({ message: response.statusText }))
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || "Unknown error"}`)
+    
+    // 401 에러는 조용히 처리
+    if (response.status === 401) {
+      console.log("🔒 로그인이 필요한 서비스입니다.")
+      throw new Error("Unauthorized")
     }
 
-    return await response.json()
+    // 응답의 Content-Type 헤더 확인
+    const contentType = response.headers.get("content-type")
+
+    if (!response.ok) {
+      let errorMessage = response.statusText
+      if (contentType?.includes("application/json")) {
+        const errorData = await response.json()
+        errorMessage = errorData.message || errorMessage
+      }
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorMessage}`)
+    }
+
+    // 응답이 비어있거나 JSON이 아닌 경우 처리
+    if (!contentType || !contentType.includes("application/json")) {
+      return {
+        success: true,
+        status: response.status
+      }
+    }
+
+    // JSON 응답 파싱
+    const data = await response.json()
+    return {
+      success: true,
+      data,
+      status: response.status
+    }
   } catch (error) {
+    if (error.message === "Unauthorized") {
+      throw error
+    }
     console.error("API request failed:", error)
     throw error
   }
@@ -58,40 +87,106 @@ const contentApiRequest = async (endpoint, options = {}) => {
 };
 
 //---------------------------------------------
+// 로그 상태를 추적하기 위한 변수
+let isAuthChecked = false;
 
 // 인증 관련 API
 export const authAPI = {
   // 로그인
-  login: async (email, password) => {
-    return apiRequest("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    })
+  login: async (accountId, password) => {
+    try {
+      const response = await apiRequest("/login", {
+        method: "POST",
+        body: JSON.stringify({ accountId, password }),
+      })
+
+      // 로그인 성공 시 바로 사용자 정보 조회
+      if (response.success) {
+        const userData = await apiRequest("/auth/me")
+        return {
+          success: true,
+          user: userData.data
+        }
+      }
+
+      return response
+    } catch (error) {
+      console.error("Login failed:", error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
   },
 
   // 회원가입
-  register: async (name, email, password) => {
-    return apiRequest("/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ name, email, password }),
-    })
+  register: async (username, accountId, password) => {
+    try {
+      const response = await apiRequest("/auth/join", {
+        method: "POST",
+        body: JSON.stringify({ username, accountId, password }),
+      })
+      return response
+    } catch (error) {
+      console.error("Register failed:", error)
+      throw error
+    }
   },
 
   // 로그아웃
   logout: async () => {
-    return apiRequest("/auth/logout", {
-      method: "POST",
-    })
+    try {
+      await apiRequest("/auth/logout", {
+        method: "POST",
+      })
+      // HttpOnly 쿠키는 서버에서 제거됨
+      isAuthChecked = false // 로그아웃 시 상태 초기화
+    } catch (error) {
+      console.error("Logout failed:", error)
+      throw error
+    }
   },
 
   // 현재 사용자 정보 조회
   getCurrentUser: async () => {
-    return apiRequest("/auth/me")
+    try {
+      const response = await apiRequest("/auth/me")
+      if (!response.success && !isAuthChecked) {
+        console.log("👤 현재 비로그인 상태입니다.")
+        isAuthChecked = true
+      }
+      return response.data
+    } catch (error) {
+      if (!isAuthChecked) {
+        console.log("👤 현재 비로그인 상태입니다.")
+        isAuthChecked = true
+      }
+      return null
+    }
   },
 
   // 토큰 검증
   validateToken: async () => {
-    return apiRequest("/auth/validate")
+    try {
+      const response = await apiRequest("/auth/validate")
+      return response.data
+    } catch (error) {
+      console.error("Token validation failed:", error)
+      throw error
+    }
+  },
+
+  // 아이디 중복 확인
+  checkAccountId: async (accountId) => {
+    try {
+      const response = await apiRequest(`/auth/duplicate?accountId=${encodeURIComponent(accountId)}`, {
+        method: "GET"
+      })
+      return response
+    } catch (error) {
+      console.error("AccountId check failed:", error)
+      throw error
+    }
   },
 }
 
