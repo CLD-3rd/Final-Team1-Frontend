@@ -29,29 +29,35 @@ export default function MyPage() {
     if (user) {
       fetchTestHistory()
     }
-  }, [user, isLoading, navigate]) // 의존성 배열에 navigate 추가
+  }, [user, isLoading]) 
 
-  const fetchTestHistory = async () => {
-    try {
-      const historyData = await testAPI.getTestHistory()
-      setHistory(historyData)
-    } catch (error) {
-      console.error("Failed to fetch test history:", error)
-      toast({
-        title: "오류",
-        description: "테스트 히스토리를 불러오는 중 오류가 발생했습니다.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+
+  // 마이페이지 컨텐츠 히스토리 (수정)
+const fetchTestHistory = async () => {
+  try {
+    const historyData = await testAPI.getTestHistory(user.id);
+    console.log("API 응답 데이터:", historyData);
+    setHistory(historyData);
+  } catch (error) {
+    console.error("Failed to fetch test history:", error);
+    toast({
+      title: "오류",
+      description: "테스트 히스토리를 불러오는 중 오류가 발생했습니다.",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
   }
+}
+
+
 
   const handleHistoryClick = async (item) => {
     try {
       setSelectedHistory(item)
       // 해당 성향의 추천 컨텐츠 조회
-      const recs = await testAPI.getRecommendations(item.personality)
+      // const recs = await testAPI.getRecommendations(item.personality)
+      const recs = await testAPI.getRecommendations(item.userType)  // userType으로 변경
       setRecommendations(recs)
     } catch (error) {
       console.error("Failed to fetch recommendations:", error)
@@ -103,7 +109,7 @@ export default function MyPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">내 성향</h3>
-                  <p className="text-lg">{history.length > 0 ? history[0].personality : "테스트를 완료해주세요"}</p>
+                  <p className="text-lg">{history.length > 0 ? history[0].userType : "테스트를 완료해주세요"}</p>
                 </div>
               </div>
             </CardContent>
@@ -130,9 +136,10 @@ export default function MyPage() {
                     >
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="font-semibold">{item.personality}</p>
-                          <p className="text-sm text-gray-500">{formatDate(item.completedAt)}</p>
-                          <p className="text-sm text-gray-600">점수: {item.score.toFixed(1)}점</p>
+                          <p className="font-semibold">{item.userType}</p> {/*personality -> 수정: userType 사용 */}
+                          <p className="text-sm text-gray-500">{formatDate(item.createdAt)}</p> {/* item.completedAt -> 수정: createdAt 사용 */}
+                          {/* <p className="text-sm text-gray-600">점수: {item.score.toFixed(1)}점</p> */}
+                          {/* <p className="text-sm text-gray-600">점수: {typeof item.score === "number" ? item.score.toFixed(1) : "-"}점</p> */}
                         </div>
                         <Button variant="outline" size="sm">
                           상세보기

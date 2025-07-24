@@ -123,29 +123,35 @@ export const testAPI = {
     }
   },
 
-  getTestHistory: async () => {
-    try {
-      return await apiRequest("/test/history")
-    } catch (error) {
-      console.log("Backend API not available, using localStorage (dev mode)...")
 
-      // 로컬 스토리지에서 조회 (개발용)
-      const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]")
-      return history
-    }
-  },
+// 테스트 히스토리 조회 (수정)
+  getTestHistory: async (userId) => {
+  try {
+    return await apiRequest(`/test/history?userId=${userId}`); 
+  } catch (error) {
+    console.log("Backend API not available, using localStorage (dev mode)...");
 
-  getRecommendations: async (personality) => {
+    // 로컬 스토리지에서 조회 (개발용)
+    const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
+    // userId로 필터링 (userId가 저장되어 있다면)
+    return history.filter(item => item.userId === userId);
+  }
+},
+
+
+
+  getRecommendations: async (personalityOrUserType) => {
     try {
-      return await apiRequest(`/recommendations/${personality}`)
+      return await apiRequest(`/recommendations/${personalityOrUserType}`)
     } catch (error) {
       console.log("Backend API not available, using mock data (dev mode)...")
 
-      // 목업 데이터 반환 (개발용)
-      return MOCK_RECOMMENDATIONS[personality] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"]
+      // personalityOrUserType이 없으면 기본값 사용
+      const key = personalityOrUserType || "균형잡힌 분석형";
+      return MOCK_RECOMMENDATIONS[key] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"];
     }
   },
-  
+    
 }
 
 
