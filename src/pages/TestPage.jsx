@@ -111,6 +111,13 @@ export default function TestPage() {
     const testId = response.testId
     const recommendation = await contentAPI.requestRecommendation(testId)
 
+    console.log("✅ 추천 생성 완료");
+
+    // 3. book/music/movie 추천 요청 보내기 (응답은 무시)
+    contentAPI.bookRecommendation(testId);
+    contentAPI.musicRecommendation(testId);
+    contentAPI.movieRecommendation(testId);
+
     // 결과 페이지로 이동 (testId 넘기기)
     navigate(`/result?testId=${testId}`)
 

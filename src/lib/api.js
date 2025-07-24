@@ -1,7 +1,7 @@
 // API 호출을 위한 기본 설정
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
 const CONTENT_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8081/api"
-
+const TEST_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8082/api"
 
 import { MOCK_RECOMMENDATIONS } from "./mock-data"
 
@@ -85,6 +85,32 @@ const contentApiRequest = async (endpoint, options = {}) => {
 
   return await response.json();
 };
+
+//---------------------------------------------
+
+// 테스트 서버용 요청 --------------
+// 8082 test 서버용 요청 함수 추가
+const testApiRequest = async (endpoint, options = {}) => {
+  const url = `${TEST_SERVER_BASE_URL}${endpoint}`;
+
+  const defaultOptions = {
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...options.headers },
+    ...options,
+  };
+
+  const response = await fetch(url, defaultOptions);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || "Unknown error"}`);
+  }
+
+  return await response.json();
+};
+//----------------------------------------------
+
+
 
 //---------------------------------------------
 // 로그 상태를 추적하기 위한 변수
@@ -194,7 +220,7 @@ export const authAPI = {
 export const testAPI = {
   saveTestResult: async (testData) => {
     try {
-      const response = await apiRequest("/test/save", {
+      const response = await testApiRequest("/test/save", {
         method: "POST",
         body: JSON.stringify(testData),
       });
@@ -220,9 +246,8 @@ export const testAPI = {
 
 
 // 테스트 히스토리 조회 (수정)
-  getTestHistory: async (userId) => {
+  getTestResultHistory: async (userId) => {
   try {
-    //return await apiRequest(`/test/history/result?userId=${userId}`); 
     return await apiRequest(`/test/history?userId=${userId}`); 
   } catch (error) {
     console.log("Backend API not available, using localStorage (dev mode)...");
@@ -264,17 +289,48 @@ export const contentAPI = {
     }
   },
 
-//   getTestHistory: async (userId) => {
-//   try {
-//     return await apiRequest(`/test/history`); 
-//   } catch (error) {
-//     console.log("Backend API not available, using localStorage (dev mode)...");
+  getTestHistory: async (testId) => {
+  try {
+    return await contentApiRequest(`/test/history?testId=${encodeURIComponent(testId)}`);
 
-//     // 로컬 스토리지에서 조회 (개발용)
-//     const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
-//     // userId로 필터링 (userId가 저장되어 있다면)
-//     return history.filter(item => item.userId === userId);
-//   }
-// }
+  } catch (error) {
+    console.log("Backend API not available, using localStorage (dev mode)...");
+
+    const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
+    return history.find(item => item.id === testId); // id는 로컬 저장 기준
+  }
+},
+
+// 3. Book 상세 조회
+  bookRecommendation: async (testId) => {
+    try {
+      return await contentApiRequest(`/content/book?testId=${testId}`);
+    } catch (error) {
+      console.log("Book API 호출 실패:", error);
+      throw error;
+    }
+  },
+
+  // 4. Music 상세 조회
+  musicRecommendation: async (testId) => {
+    try {
+      return await contentApiRequest(`/content/music?testId=${testId}`);
+    } catch (error) {
+      console.log("Music API 호출 실패:", error);
+      throw error;
+    }
+  },
+
+  // 5. Movie 상세 조회 (선택)
+  movieRecommendation: async (testId) => {
+    try {
+      return await contentApiRequest(`/content/movie?testId=${testId}`);
+    } catch (error) {
+      console.log("Movie API 호출 실패:", error);
+      throw error;
+    }
+  }
+
+
 
 }
