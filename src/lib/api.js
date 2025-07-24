@@ -1,6 +1,6 @@
 // API 호출을 위한 기본 설정
 // Vite 환경 변수는 import.meta.env.VITE_ 접두사를 사용합니다.
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8082/api"
 
 import { MOCK_RECOMMENDATIONS } from "./mock-data" // 상대 경로로 변경
 
@@ -114,16 +114,15 @@ export const testAPI = {
 
 
 
-  getRecommendations: async (personalityOrUserType) => {
+  getRecommendations: async (personality) => {
     try {
-      return await apiRequest(`/recommendations/${personalityOrUserType}`)
+      return await apiRequest(`/recommendations/${personality}`)
     } catch (error) {
       console.log("Backend API not available, using mock data (dev mode)...")
 
-      // personalityOrUserType이 없으면 기본값 사용
-      const key = personalityOrUserType || "균형잡힌 분석형";
-      return MOCK_RECOMMENDATIONS[key] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"];
+      // 목업 데이터 반환 (개발용)
+      return MOCK_RECOMMENDATIONS[personality] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"]
     }
   },
-    
+  
 }
