@@ -3,7 +3,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
 const CONTENT_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8081/api"
 const TEST_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8082/api"
 
-
 import { MOCK_RECOMMENDATIONS } from "./mock-data"
 
 // 기본 fetch 설정
@@ -278,18 +277,18 @@ getTestResultHistory: async (userIdParam) => {
 
 
 
+
   getRecommendations: async (personalityOrUserType) => {
     try {
-      return await apiRequest(`/recommendations/${personalityOrUserType}`)
+      return await apiRequest(`/recommendations/${personality}`)
     } catch (error) {
       console.log("Backend API not available, using mock data (dev mode)...")
 
-      // personalityOrUserType이 없으면 기본값 사용
-      const key = personalityOrUserType || "균형잡힌 분석형";
-      return MOCK_RECOMMENDATIONS[key] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"];
+      // 목업 데이터 반환 (개발용)
+      return MOCK_RECOMMENDATIONS[personality] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"]
     }
   },
-    
+  
 }
 
 
