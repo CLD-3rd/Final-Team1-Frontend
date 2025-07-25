@@ -61,7 +61,7 @@ export default function ResultPage() {
 const fetchLatestResult = async () => {
   try {
     // user.id를 인자로 전달
-    const history = await testAPI.getTestHistory(user.id);
+    const history = await testAPI.getTestResultHistory(user.id);
 
     if (history.length === 0) {
       navigate("/test");

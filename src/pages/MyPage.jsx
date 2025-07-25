@@ -35,7 +35,7 @@ export default function MyPage() {
   // 마이페이지 컨텐츠 히스토리 (수정)
 const fetchTestHistory = async () => {
   try {
-    const historyData = await testAPI.getTestHistory(user.id);
+    const historyData = await testAPI.getTestResultHistory(user.id);
     console.log("API 응답 데이터:", historyData);
     setHistory(historyData);
   } catch (error) {
@@ -105,7 +105,7 @@ const fetchTestHistory = async () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">이름</h3>
-                  <p className="text-lg">{user.name}</p>
+                  <p className="text-lg">{user.username}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">내 성향</h3>

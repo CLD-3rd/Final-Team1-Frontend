@@ -1,22 +1,22 @@
 "use client"
 
 import React, { useState } from "react"
-import { useNavigate, Link } from "react-router-dom" // useNavigate와 Link 임포트
-import { useAuth } from "../components/auth-provider" // 상대 경로로 변경
-import { Header } from "../components/header" // 상대 경로로 변경
-import { Button } from "../components/ui/button" // 상대 경로로 변경
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card" // 상대 경로로 변경
-import { Input } from "../components/ui/input" // 상대 경로로 변경
-import { Label } from "../components/ui/label" // 상대 경로로 변경
-import { Separator } from "../components/ui/separator" // 상대 경로로 변경
-import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
+import { useNavigate, Link } from "react-router-dom"
+import { useAuth } from "../components/auth-provider"
+import { Header } from "../components/header"
+import { Button } from "../components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
+import { Separator } from "../components/ui/separator"
+import { useToast } from "../hooks/use-toast"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
-  const navigate = useNavigate() // useRouter 대신 useNavigate 사용
+  const navigate = useNavigate()
   const { toast } = useToast()
 
   const handleSubmit = async (e) => {
@@ -24,17 +24,17 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const success = await login(email, password)
+      const success = await login(username, password)
       if (success) {
         toast({
           title: "로그인 성공",
           description: "환영합니다!",
         })
-        navigate("/") // router.push 대신 navigate 사용
+        navigate("/")
       } else {
         toast({
           title: "로그인 실패",
-          description: "이메일 또는 비밀번호를 확인해주세요.",
+          description: "아이디 또는 비밀번호를 확인해주세요.",
           variant: "destructive",
         })
       }
@@ -50,8 +50,6 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = () => {
-    // Google OAuth 로그인 - 백엔드 엔드포인트로 리다이렉트
-    // Vite 환경 변수는 import.meta.env.VITE_ 접두사를 사용합니다.
     window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:8080/api"}/auth/google`
   }
 
@@ -69,13 +67,13 @@ export default function LoginPage() {
             <CardContent className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">이메일</Label>
+                  <Label htmlFor="username">아이디</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="example@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="username"
+                    type="text"
+                    placeholder="아이디를 입력하세요"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     required
                   />
                 </div>
@@ -128,15 +126,14 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* 테스트 계정 안내 섹션을 더 명확하게 표시: */}
               <div className="text-center text-sm bg-blue-50 p-4 rounded-lg">
                 <p className="font-semibold text-blue-800 mb-2">🧪 테스트 계정</p>
                 <div className="space-y-1 text-blue-700">
                   <p>
-                    <strong>계정 1:</strong> test@example.com / password123
+                    <strong>계정 1:</strong> testuser / password123
                   </p>
                   <p>
-                    <strong>계정 2:</strong> dev@example.com / dev123
+                    <strong>계정 2:</strong> devuser / dev123
                   </p>
                 </div>
                 <p className="text-xs text-blue-600 mt-2">* 백엔드 서버가 없어도 테스트 가능합니다</p>
