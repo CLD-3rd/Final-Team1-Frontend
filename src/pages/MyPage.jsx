@@ -41,6 +41,7 @@ const fetchMypage = async () => {
      // testId 기준 내림차순 정렬 - 최신이 가장 위로 오게 하기 위함
     const sortedHistory = historyData.sort((a, b) => b.testId - a.testId);
     setHistory(sortedHistory);
+origin/feat/test-to-connect-auth
   } catch (error) {
     console.error("Failed to fetch test history:", error);
     toast({
@@ -97,7 +98,7 @@ const fetchMypage = async () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">이름</h3>
-                  <p className="text-lg">{user.name}</p>
+                  <p className="text-lg">{user.username}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">내 성향</h3>

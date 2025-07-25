@@ -53,7 +53,9 @@ const fetchLatestResult = async () => {
       setRecommendations(recs)
     } else {
       //  testId가 없으면 기존 로직으로 사용자 기반 최신 결과 조회
-      const history = await testAPI.getTestHistory(user.id)
+      // const history = await testAPI.getTestHistory(user.id)
+     // user.id를 인자로 전달
+     const history = await testAPI.getTestResultHistory(user.id);
 
       if (history.length === 0) {
         navigate("/test")
