@@ -86,20 +86,25 @@ export default function TestPage() {
     const averageScore = totalScore / questions.length
 
     let personality = ""
+    let typeDescription = ""
     if (averageScore >= 4) {
-      personality = "D"
+      personality = "D형 (지배형)"
+      typeDescription = "당신은 도전적이고 리더십이 강한 D형입니다!"
     } else if (averageScore >= 3) {
-      personality = "I"
+      personality = "I형 (사교형)"
+      typeDescription = "당신은 활발하고 사람을 좋아하는 I형입니다!"
     } else if (averageScore >= 2) {
-      personality = "S"
+      personality = "S형 (안정형)"
+      typeDescription = "당신은 따뜻하고 성실한 S형입니다!"
     } else {
-      personality = "C"
+      personality = "C형 (신중형)"
+      typeDescription = "당신은 분석적이고 꼼꼼한 C형입니다!"
     }
 
     const testResult = {
       userId: user.id, // 반드시 존재해야 함
       userType: personality,
-      typeDescription: "당신은 " + personality + " 성향입니다.",
+      typeDescription: typeDescription,
       completedAt: new Date().toISOString()
     }
 
