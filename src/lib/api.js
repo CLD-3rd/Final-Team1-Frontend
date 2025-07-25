@@ -289,6 +289,7 @@ export const contentAPI = {
     }
   },
 
+  //테스트 결과 조회 api 
   getTestHistory: async (testId) => {
   try {
     return await contentApiRequest(`/test/history?testId=${encodeURIComponent(testId)}`);
@@ -298,6 +299,18 @@ export const contentAPI = {
 
     const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
     return history.find(item => item.id === testId); // id는 로컬 저장 기준
+  }
+},
+
+//mypage 컨텐츠 히스토리 조회 api
+getMypage: async (userId) => {
+  try {
+    return await contentApiRequest(`/test/history?userId=${encodeURIComponent(userId)}`);
+  } catch (error) {
+    console.log("Backend API not available, using localStorage (dev mode)...");
+
+    const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
+    return history.filter(item => item.userId === userId);
   }
 },
 
