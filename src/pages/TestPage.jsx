@@ -119,9 +119,10 @@ export default function TestPage() {
     console.log("✅ 추천 생성 완료");
 
     // 3. book/music/movie 추천 요청 보내기 (응답은 무시)
-    contentAPI.bookRecommendation(testId);
-    contentAPI.musicRecommendation(testId);
-    contentAPI.movieRecommendation(testId);
+    await contentAPI.bookRecommendation(testId);
+    await contentAPI.musicRecommendation(testId);
+    await contentAPI.movieRecommendation(testId);
+    console.log("📚 음악/책/영화 추천 저장 완료");
 
     // 결과 페이지로 이동 (testId 넘기기)
     navigate(`/result?testId=${testId}`)
