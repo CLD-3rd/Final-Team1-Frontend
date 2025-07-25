@@ -16,9 +16,9 @@ export function Header() {
 
   return (
     <header className="border-b bg-white">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div className="container mx-auto px-2 py-0.5 flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-primary">
-          성향 테스트
+          <img src="/logo.png" alt="로고" className="h-16 w-auto my-2" />
         </Link>
 
         <div className="flex items-center gap-4">
