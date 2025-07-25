@@ -10,30 +10,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group" // 상대 경로로 변경
 import { Label } from "../components/ui/label" // 상대 경로로 변경
 import { Progress } from "../components/ui/progress" // 상대 경로로 변경
-import { testAPI } from "../lib/api" // 상대 경로로 변경
+import { testAPI, contentAPI } from "../lib/api" // 상대 경로로 변경
 import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
 
 const questions = [
   "나는 새로운 사람들과 만나는 것을 좋아한다",
-  "나는 계획을 세우고 그대로 실행하는 것을 선호한다",
-  "나는 감정보다는 논리적으로 판단하는 편이다",
-  "나는 마감일이 다가와야 일을 시작하는 편이다",
-  "나는 파티나 모임에서 에너지를 얻는다",
-  "나는 세부사항보다는 큰 그림을 보는 것을 좋아한다",
-  "나는 다른 사람의 감정을 잘 이해한다",
-  "나는 즉흥적인 결정을 내리는 것을 좋아한다",
-  "나는 혼자 있는 시간이 필요하다",
-  "나는 실용적이고 현실적인 해결책을 선호한다",
-  "나는 갈등 상황을 피하려고 한다",
-  "나는 여러 가지 일을 동시에 처리하는 것을 좋아한다",
-  "나는 사교적이고 외향적이다",
-  "나는 미래의 가능성에 대해 생각하는 것을 좋아한다",
-  "나는 객관적이고 분석적으로 사고한다",
-  "나는 구조화되고 조직적인 환경을 선호한다",
-  "나는 팀워크보다는 개인 작업을 선호한다",
-  "나는 전통적인 방법보다는 새로운 방법을 시도한다",
-  "나는 결정을 내릴 때 다른 사람의 의견을 고려한다",
-  "나는 융통성 있고 적응력이 좋다",
+  // "나는 계획을 세우고 그대로 실행하는 것을 선호한다",
+  // "나는 감정보다는 논리적으로 판단하는 편이다",
+  // "나는 마감일이 다가와야 일을 시작하는 편이다",
+  // "나는 파티나 모임에서 에너지를 얻는다",
+  // "나는 세부사항보다는 큰 그림을 보는 것을 좋아한다",
+  // "나는 다른 사람의 감정을 잘 이해한다",
+  // "나는 즉흥적인 결정을 내리는 것을 좋아한다",
+  // "나는 혼자 있는 시간이 필요하다",
+  // "나는 실용적이고 현실적인 해결책을 선호한다",
+  // "나는 갈등 상황을 피하려고 한다",
+  // "나는 여러 가지 일을 동시에 처리하는 것을 좋아한다",
+  // "나는 사교적이고 외향적이다",
+  // "나는 미래의 가능성에 대해 생각하는 것을 좋아한다",
+  // "나는 객관적이고 분석적으로 사고한다",
+  // "나는 구조화되고 조직적인 환경을 선호한다",
+  // "나는 팀워크보다는 개인 작업을 선호한다",
+  // "나는 전통적인 방법보다는 새로운 방법을 시도한다",
+  // "나는 결정을 내릴 때 다른 사람의 의견을 고려한다",
+  // "나는 융통성 있고 적응력이 좋다",
 ]
 
 export default function TestPage() {
@@ -77,51 +77,72 @@ export default function TestPage() {
     }
   }
 
+  // 테스트 결과 제출 (수정함)
   const handleSubmit = async () => {
-    setIsSubmitting(true)
+  setIsSubmitting(true)
 
-    try {
-      // 점수 계산 로직
-      const totalScore = Object.values(answers).reduce((sum, score) => sum + score, 0)
-      const averageScore = totalScore / questions.length
+  try {
+    const totalScore = Object.values(answers).reduce((sum, score) => sum + score, 0)
+    const averageScore = totalScore / questions.length
 
-      let personality = ""
-      if (averageScore >= 4) {
-        personality = "외향적 리더형"
-      } else if (averageScore >= 3) {
-        personality = "균형잡힌 분석형"
-      } else {
-        personality = "신중한 사색형"
-      }
-
-      // 백엔드에 테스트 결과 저장
-      const testResult = {
-        personality,
-        score: averageScore,
-        answers,
-        completedAt: new Date().toISOString(),
-      }
-
-      await testAPI.saveTestResult(testResult)
-
-      // 결과 페이지로 이동 (결과는 백엔드에서 조회)
-      navigate("/result") // router.push 대신 navigate 사용
-
-      toast({
-        title: "테스트 완료",
-        description: "결과를 확인해보세요!",
-      })
-    } catch (error) {
-      console.error("Test submission failed:", error)
-      toast({
-        title: "오류",
-        description: "테스트 결과 저장 중 오류가 발생했습니다.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
+    let personality = ""
+    let typeDescription = ""
+    if (averageScore >= 4) {
+      personality = "D형 (지배형)"
+      typeDescription = "당신은 도전적이고 리더십이 강한 D형입니다!"
+    } else if (averageScore >= 3) {
+      personality = "I형 (사교형)"
+      typeDescription = "당신은 활발하고 사람을 좋아하는 I형입니다!"
+    } else if (averageScore >= 2) {
+      personality = "S형 (안정형)"
+      typeDescription = "당신은 따뜻하고 성실한 S형입니다!"
+    } else {
+      personality = "C형 (신중형)"
+      typeDescription = "당신은 분석적이고 꼼꼼한 C형입니다!"
     }
+
+    const testResult = {
+      userId: user.id, // 반드시 존재해야 함
+      userType: personality,
+      typeDescription: typeDescription,
+      completedAt: new Date().toISOString()
+    }
+
+    // 백엔드에 저장 + testId 응답 받기
+    const response = await testAPI.saveTestResult(testResult)
+    console.log("백엔드 응답:", response);
+    //gemini 백엔드로 testid보내기
+  
+    const testId = response.testId
+    const recommendation = await contentAPI.requestRecommendation(testId)
+
+    console.log("✅ 추천 생성 완료");
+
+    // 3. book/music/movie 추천 요청 보내기 (응답은 무시)
+    await contentAPI.bookRecommendation(testId);
+    await contentAPI.musicRecommendation(testId);
+    await contentAPI.movieRecommendation(testId);
+    console.log("📚 음악/책/영화 추천 저장 완료");
+
+    // 결과 페이지로 이동 (testId 넘기기)
+    navigate(`/result?testId=${testId}`)
+
+    toast({
+      title: "테스트 완료",
+      description: "결과를 확인해보세요!",
+    })
+  } catch (error) {
+    console.error("Test submission failed:", error)
+    toast({
+      title: "오류",
+      description: "테스트 결과 저장 중 오류가 발생했습니다.",
+      variant: "destructive",
+    })
+  } finally {
+    setIsSubmitting(false)
   }
+}
+
 
   const progress = ((currentQuestion + 1) / questions.length) * 100
   const isAnswered = answers[currentQuestion] !== undefined

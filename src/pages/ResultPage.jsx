@@ -2,70 +2,79 @@
 
 import React from 'react'
 import { useState, useEffect } from "react"
+import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom" // useNavigate 임포트
 import { useAuth } from "../components/auth-provider" // 상대 경로로 변경
 import { Header } from "../components/header" // 상대 경로로 변경
 import { Button } from "../components/ui/button" // 상대 경로로 변경
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card" // 상대 경로로 변경
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs" // 상대 경로로 변경
-import { testAPI } from "../lib/api" // 상대 경로로 변경
+import { testAPI,contentAPI   } from "../lib/api" // 상대 경로로 변경
 import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
 
 export default function ResultPage() {
   const { user, isLoading } = useAuth()
   const navigate = useNavigate() // useRouter 대신 useNavigate 사용
-  const [testResult, setTestResult] = useState(null)
+  const [latestResult, setLatestResult] = useState(null);     // 👉 상단 성향용
+  const [testDetail, setTestDetail] = useState(null); 
   const [recommendations, setRecommendations] = useState(null)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+  const [searchParams] = useSearchParams();
+  const testId = searchParams.get("testId");
+console.log("넘겨받은 testId:", testId);
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      navigate("/login") // router.push 대신 navigate 사용
-      return
-    }
+  const fetchBoth = async () => {
+    if (!user || isLoading) return;
 
-    if (user) {
-      fetchLatestResult()
-    }
-  }, [user, isLoading, navigate]) // 의존성 배열에 navigate 추가
-
-  const fetchLatestResult = async () => {
     try {
-      // 백엔드에서 최신 테스트 결과 조회
-      const history = await testAPI.getTestHistory()
-
-      if (history.length === 0) {
-        navigate("/test") // navigate 사용
-        return
+      // 1. testId로 상세 테스트 결과 조회
+      if (testId) {
+        const res = await contentAPI.getTestHistory(testId);
+        console.log("✅ testId 기반 결과:", res);
+        setTestDetail(res);
+        setRecommendations(res.Recommend);
+        console.log("✅ testId 기반 결과- Recommend만:", res.Recommend);
       }
 
-      const latestResult = history[0] // 최신 결과
-      setTestResult(latestResult)
+       // 2. user.id로 테스트 기록 조회
+      const history = await testAPI.getTestResultHistory(user.id);
+      console.log("📦 전체 기록 목록:", history);
 
-      // 성향에 따른 추천 컨텐츠 조회
-      const recs = await testAPI.getRecommendations(latestResult.personality)
-      setRecommendations(recs)
+      if (history && history.length > 0) {
+        const sorted = history.sort((a, b) => b.testId - a.testId);
+        const latest = sorted[0];
+        console.log("🔥 testId 가장 큰 최신 기록:", latest);
+        setLatestResult(latest); //최신 결과 
+      }
+
     } catch (error) {
-      console.error("Failed to fetch test result:", error)
+      console.error("❌ 데이터 요청 실패:", error);
       toast({
         title: "오류",
-        description: "테스트 결과를 불러오는 중 오류가 발생했습니다.",
+        description: "결과를 불러오는 중 문제가 발생했습니다.",
         variant: "destructive",
-      })
-      navigate("/test") // navigate 사용
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+  fetchBoth();
+}, [user, isLoading, testId]);
+
 
   if (isLoading || loading) {
     return <div className="flex justify-center items-center min-h-screen">로딩 중...</div>
   }
 
-  if (!user || !testResult || !recommendations) {
+    if (!user || !recommendations) {
     return null
   }
+  // if (!user || !testResult || !recommendations) {
+  //   return null
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -79,17 +88,13 @@ export default function ResultPage() {
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-4">테스트 결과</CardTitle>
                 <div className="text-6xl mb-4">🎯</div>
-                <h2 className="text-4xl font-bold mb-4">{testResult.personality}</h2>
-                <p className="text-xl opacity-90">평균 점수: {testResult.score.toFixed(1)}점</p>
+                <h2 className="text-4xl font-bold mb-4">
+                  {latestResult?.userType || "성향 없음"}
+                </h2>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-lg opacity-90 mb-6">
-                  {testResult.personality === "외향적 리더형" &&
-                    "당신은 사교적이고 리더십이 뛰어난 성향입니다. 새로운 도전을 즐기고 팀을 이끄는 것을 좋아합니다."}
-                  {testResult.personality === "균형잡힌 분석형" &&
-                    "당신은 논리적이면서도 감정적 균형을 잘 맞추는 성향입니다. 신중하게 판단하고 합리적인 결정을 내립니다."}
-                  {testResult.personality === "신중한 사색형" &&
-                    "당신은 깊이 있게 생각하고 신중한 성향입니다. 혼자만의 시간을 소중히 여기고 내면의 성찰을 중요하게 생각합니다."}
+                  {latestResult?.typeDescription || "설명 없음"}
                 </p>
               </CardContent>
             </Card>
@@ -110,10 +115,30 @@ export default function ResultPage() {
 
                 <TabsContent value="movies" className="mt-6">
                   <div className="grid gap-4">
-                    {recommendations.movies?.map((movie, index) => (
-                      <div key={index} className="p-4 bg-gray-100 rounded-lg">
-                        <h3 className="font-semibold">{movie.title}</h3>
-                        {movie.description && <p className="text-sm text-gray-600 mt-1">{movie.description}</p>}
+                    {recommendations?.Movie?.map((movie, index) => (
+                      <div key={index} className="flex items-start gap-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                        {movie.poster_path && (
+                          <img
+                            src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
+                            alt={movie.title}
+                            className="w-24 h-36 object-cover rounded-md"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold">제목: {movie.title}</h3>
+
+                          {movie.release_date && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              개봉일: {new Date(movie.release_date).toLocaleDateString("ko-KR")}
+                            </p>
+                          )}
+
+                          {movie.overview && (
+                            <p className="text-sm text-gray-700 mt-2 line-clamp-4">
+                              설명: {movie.overview}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -121,11 +146,20 @@ export default function ResultPage() {
 
                 <TabsContent value="books" className="mt-6">
                   <div className="grid gap-4">
-                    {recommendations.books?.map((book, index) => (
-                      <div key={index} className="p-4 bg-gray-100 rounded-lg">
-                        <h3 className="font-semibold">{book.title}</h3>
-                        {book.author && <p className="text-sm text-gray-600 mt-1">저자: {book.author}</p>}
-                        {book.description && <p className="text-sm text-gray-600 mt-1">{book.description}</p>}
+                    {recommendations?.Book?.map((book, index) => (
+                      <div key={index} className="flex items-start gap-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                        {book.image && (
+                          <img
+                            src={book.image}
+                            alt={book.title}
+                            className="w-24 h-36 object-cover rounded-md"
+                          />
+                        )}
+                        <div>
+                          <h3 className="text-lg font-semibold">{book.title}</h3>
+                          {book.author && <p className="text-sm text-gray-700 mt-1">저자: {book.author}</p>}
+                          {book.description && <p className="text-sm text-gray-600 mt-2">설명: {book.description}</p>}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -133,15 +167,26 @@ export default function ResultPage() {
 
                 <TabsContent value="music" className="mt-6">
                   <div className="grid gap-4">
-                    {recommendations.music?.map((artist, index) => (
-                      <div key={index} className="p-4 bg-gray-100 rounded-lg">
-                        <h3 className="font-semibold">{artist.name}</h3>
-                        {artist.genre && <p className="text-sm text-gray-600 mt-1">장르: {artist.genre}</p>}
-                        {artist.description && <p className="text-sm text-gray-600 mt-1">{artist.description}</p>}
+                    {recommendations?.Music?.map((music, index) => (
+                      <div key={index} className="flex items-start gap-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                        {music.album && (
+                          <img
+                            src={music.album}
+                            alt={music.title}
+                            className="w-24 h-24 object-cover rounded-md"
+                          />
+                        )}
+                        <div>
+                          <h3 className="text-lg font-semibold">제목: {music.title}</h3>
+                          {music.artist && (
+                            <p className="text-sm text-gray-700 mt-1">아티스트: {music.artist}</p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </TabsContent>
+
               </Tabs>
             </CardContent>
           </Card>
