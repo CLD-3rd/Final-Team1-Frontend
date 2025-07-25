@@ -1,6 +1,7 @@
 // API 호출을 위한 기본 설정
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
 const CONTENT_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8081/api"
+const TEST_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8082/api"
 
 
 import { MOCK_RECOMMENDATIONS } from "./mock-data"
@@ -87,11 +88,43 @@ const contentApiRequest = async (endpoint, options = {}) => {
 };
 
 //---------------------------------------------
+
+// 8082 테스트 서버용 요청 함수 추가
+const testApiRequest = async (endpoint, options = {}) => {
+  const url = `${TEST_SERVER_BASE_URL}${endpoint}`;
+  const token = localStorage.getItem("accessToken");
+
+  const defaultOptions = {
+    credentials: "include", // 쿠키 자동 전송
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+    ...options,
+  }
+
+  try {
+    const response = await fetch(url, defaultOptions)
+
+    if (!response.ok) {
+      // HTTP 에러 발생 시 에러 메시지 포함
+      const errorData = await response.json().catch(() => ({ message: response.statusText }))
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || "Unknown error"}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error("API request failed:", error)
+    throw error
+  }
+}
+
 // 로그 상태를 추적하기 위한 변수
 let isAuthChecked = false;
 
 // 인증 관련 API
 export const authAPI = {
+  
   // 로그인
   login: async (accountId, password) => {
     try {
@@ -108,7 +141,6 @@ export const authAPI = {
           user: userData.data
         }
       }
-
       return response
     } catch (error) {
       console.error("Login failed:", error)
@@ -191,48 +223,59 @@ export const authAPI = {
 }
 
 // 테스트 관련 API (수정함)
+
 export const testAPI = {
   saveTestResult: async (testData) => {
     try {
-      const response = await apiRequest("/test/save", {
+      const userId = testData.userId || localStorage.getItem("userId"); // 없으면 로컬에서 가져옴
+
+      if (!userId) {
+        throw new Error("User ID is missing");
+      }
+
+      const response = await testApiRequest(`/test/save?id=${userId}`, {
         method: "POST",
         body: JSON.stringify(testData),
       });
 
-      // 백엔드 응답: { testId: 123 }
-      return response; // { testId: ... } 형태 그대로 반환
+      return response; // { testId: ... }
     } catch (error) {
       console.log("Backend API not available, saving to localStorage (dev mode)...");
 
       const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
       const newResult = {
-        id: Date.now().toString(), // testId 대신
+        id: Date.now().toString(),
         ...testData,
+        userId: testData.userId || localStorage.getItem("userId"), // 저장 시에도 userId 포함
         completedAt: testData.completedAt || new Date().toISOString(),
       };
       history.unshift(newResult);
       localStorage.setItem("dev-test-history", JSON.stringify(history));
 
-      // 백엔드 구조와 동일하게 맞춰서 testId처럼 반환
       return { testId: newResult.id };
     }
   },
 
 
 // 테스트 히스토리 조회 (수정)
-  getTestResultHistory: async (userId) => {
+
+getTestResultHistory: async (userIdParam) => {
   try {
-    //return await apiRequest(`/test/history/result?userId=${userId}`); 
-    return await apiRequest(`/test/history?userId=${userId}`); 
+    const userId = userIdParam || localStorage.getItem("userId");
+
+    if (!userId) {
+      throw new Error("User ID is missing");
+    }
+
+    return await testApiRequest(`/test/history?id=${userId}`);
   } catch (error) {
     console.log("Backend API not available, using localStorage (dev mode)...");
 
-    // 로컬 스토리지에서 조회 (개발용)
     const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
-    // userId로 필터링 (userId가 저장되어 있다면)
-    return history.filter(item => item.userId === userId);
+    return history.filter(item => item.userId === userIdParam || localStorage.getItem("userId"));
   }
 },
+
 
 
 
@@ -263,18 +306,5 @@ export const contentAPI = {
       throw error
     }
   },
-
-//   getTestHistory: async (userId) => {
-//   try {
-//     return await apiRequest(`/test/history`); 
-//   } catch (error) {
-//     console.log("Backend API not available, using localStorage (dev mode)...");
-
-//     // 로컬 스토리지에서 조회 (개발용)
-//     const history = JSON.parse(localStorage.getItem("dev-test-history") || "[]");
-//     // userId로 필터링 (userId가 저장되어 있다면)
-//     return history.filter(item => item.userId === userId);
-//   }
-// }
 
 }

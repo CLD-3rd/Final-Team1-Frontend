@@ -105,7 +105,7 @@ const fetchTestHistory = async () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">이름</h3>
-                  <p className="text-lg">{user.name}</p>
+                  <p className="text-lg">{user.username}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">내 성향</h3>
