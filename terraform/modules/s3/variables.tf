@@ -8,7 +8,7 @@ variable "prefix" {
   type = string
 }
 
-variable "cloudfront_distribution_arn" {
-  description = "CloudFront distribution ARN"
-  type = string
-}
+# variable "cloudfront_distribution_arn" {
+#   description = "CloudFront distribution ARN"
+#   type = string
+# }

@@ -50,7 +50,7 @@ module "s3" {
 
   bucket_name = var.bucket_name
   prefix = var.prefix
-  cloudfront_distribution_arn = module.cloudfront.distribution_arn
+  # cloudfront_distribution_arn = module.cloudfront.distribution_arn
 }
 
 module "route53" {
@@ -77,6 +77,35 @@ resource "aws_acm_certificate_validation" "fe" {
   }
 
   depends_on = [ module.route53 ]
+}
+
+# CloudFront Origin access control 통해서만 버킷 객체 읽을 수 있도록 정책 설정
+resource "aws_s3_bucket_policy" "fe" {
+  bucket = aws_s3_bucket.fe.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        # CloudFront에 권한 부여
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        # Resource의 S3 getObject 권한
+        Action   = "s3:GetObject"
+        Resource = "${module.s3.bucket_arn}/*"
+
+        # "AWS:SourceArn"의 값이 var.cloudfront_distribution_arn와 똑같을 때만
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = module.cloudfront.distribution_arn
+          }
+        }
+      }
+    ]
+    }
+  )
 }
 
 module "github_oidc" {
