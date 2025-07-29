@@ -24,11 +24,11 @@ resource "aws_cloudfront_distribution" "fe" {
   default_root_object = "index.html"
   aliases             = var.domain_names
 
-  # logging_config {
-  #   include_cookies = false
-  #   bucket = var.bucket_regional_doma
-  # }
-
+  logging_config {
+    include_cookies = false
+    bucket = var.log_bucket_domain_name
+    prefix = "${var.prefix}"
+  }
 
   # 기본 캐싱 정책
   default_cache_behavior {
@@ -79,6 +79,8 @@ resource "aws_cloudfront_distribution" "fe" {
 }
 
 # CloudFront Origin access control 통해서만 버킷 객체 읽을 수 있도록 정책 설정
+# S3 버킷 정책 - Cloudfront 배포 정보 필요하므로 순환참조 문제 해결 위해 cloudfront모듈에서 선언
+# Cloudfront -> S3 필요 (aws_cloudfront_distribution에서 원본으로 사용할 s3 정보 필요), S3 버킷 정책 -> Cloudfront 필요 (특정 cloudfront에서 오는 요청만 허용하도록 정책하기 위해서)
 resource "aws_s3_bucket_policy" "fe" {
   bucket = var.bucket_id
 

@@ -7,6 +7,7 @@ terraform {
   }
 }
 
+# Default provider
 provider "aws" {
   region = var.aws_region
 }
@@ -18,7 +19,7 @@ provider "aws" {
 }
 
 locals {
-  # ACM 인증서에 사용될 SAN 목록 정의
+  # acm 인증서에 사용될 san 목록 => 와일드카드로
   acm_sans = ["*.${var.domain_name}"]
 }
 
@@ -26,8 +27,8 @@ module "s3" {
   source = "./modules/s3"
 
   bucket_name = var.bucket_name
+  log_bucket_name = var.log_bucket_name
   prefix      = var.prefix
-  # cloudfront_distribution_arn = module.cloudfront.distribution_arn
 }
 
 module "acm" {
@@ -39,6 +40,7 @@ module "acm" {
 
   domain_name               = var.domain_name
   subject_alternative_names = ["*.${var.domain_name}"]
+  # DNS 방식으로 도메인 검증
   validation_method         = "DNS"
   prefix                    = var.prefix
 }
@@ -52,9 +54,8 @@ module "cloudfront" {
   bucket_regional_domain_name = module.s3.bucket_regional_domain_name
   domain_names                = [var.domain_name, "www.${var.domain_name}"]
   acm_certificate_arn         = module.acm.certificate_arn
+  log_bucket_domain_name = module.s3.log_bucket_domain_name
 }
-
-
 
 module "route53" {
   source = "./modules/route53"
@@ -65,7 +66,7 @@ module "route53" {
 
   domain_name     = var.domain_name
   subdomain_names = ["", "www"]
-  # ACM 인증이 필요한 전체 도메인 목록을 전달
+  # acm 인증이 필요한 전체 도메인 목록을 전달
   acm_domains_for_validation                = concat([var.domain_name], local.acm_sans)
   acm_certificate_domain_validation_options = module.acm.domain_validation_options
   acm_certificate_arn                       = module.acm.certificate_arn

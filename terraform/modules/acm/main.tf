@@ -17,6 +17,7 @@ resource "aws_acm_certificate" "fe" {
   domain_name = var.domain_name
   # 추가 도메인 목록
   subject_alternative_names = var.subject_alternative_names
+  # 도메인 소유권 검증 방식 (DNS or EMAIL)
   validation_method         = var.validation_method
 
   lifecycle {

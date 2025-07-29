@@ -27,6 +27,8 @@ resource "aws_route53_record" "cert_validation" {
 }
 
 # ACM cert validation
+# acm 인증서 유효성 검증 - Route53에서 만든 dns 레코드로 유효성 검증해야하므로 순환참조 문제 해결 위해 route53모듈에서 선언
+# acm 모듈이 인증서 생성(aws_acm_certificate) -> route53이 acm 모듈의 정보 받아 dns 레코드 생성(aws_route53_record) -> 만든 dns 레코드 기반으로 acm 인증서 유효성 검증 (aws_acm_certificate_validation)
 resource "aws_acm_certificate_validation" "fe" {
   provider = aws.us-east-1
 

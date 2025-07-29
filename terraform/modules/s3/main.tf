@@ -1,4 +1,12 @@
-# bucket 생성
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "5.81.0"
+    }
+  }
+}
+# content bucket 생성
 resource "aws_s3_bucket" "fe" {
   bucket = var.bucket_name
 
@@ -34,5 +42,28 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "fe" {
       sse_algorithm = "AES256"
     }
   }
+}
 
+# log bucket 생성
+resource "aws_s3_bucket" "fe_log" {
+  bucket = var.log_bucket_name
+
+  tags = {
+    "Name" = "${var.prefix}-log-bucket"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "fe_log" {
+  bucket = aws_s3_bucket.fe_log.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# AWS log delivery service가 로그 쓸 수 있도록 acl 설정
+resource "aws_s3_bucket_acl" "fe_log_bucket_acl" {
+  bucket = aws_s3_bucket.fe_log.id
+  acl    = "log-delivery-write"
 }

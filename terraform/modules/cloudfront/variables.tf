@@ -28,3 +28,9 @@ variable "domain_names" {
   description = "Domain CNAME list"
   type        = list(string)
 }
+
+variable "log_bucket_domain_name" {
+  description = "S3 bucket name for log"
+  type = string
+  default = ""
+}
