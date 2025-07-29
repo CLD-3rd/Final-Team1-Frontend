@@ -36,32 +36,3 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "fe" {
   }
 
 }
-
-# CloudFront Origin access control 통해서만 버킷 객체 읽을 수 있도록 정책 설정
-# resource "aws_s3_bucket_policy" "fe" {
-#   bucket = aws_s3_bucket.fe.id
-
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect = "Allow"
-#         # CloudFront에 권한 부여
-#         Principal = {
-#           Service = "cloudfront.amazonaws.com"
-#         }
-#         # Resource의 S3 getObject 권한
-#         Action   = "s3:GetObject"
-#         Resource = "${aws_s3_bucket.fe.arn}/*"
-
-#         # "AWS:SourceArn"의 값이 var.cloudfront_distribution_arn와 똑같을 때만
-#         Condition = {
-#           StringEquals = {
-#             "AWS:SourceArn" = var.cloudfront_distribution_arn
-#           }
-#         }
-#       }
-#     ]
-#     }
-#   )
-# }

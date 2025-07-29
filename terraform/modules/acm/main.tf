@@ -4,7 +4,7 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
       # 별도 리전용 프로바이더 지정하도록 alias 설정
-      configuration_aliases = [ aws.us-east-1 ]
+      configuration_aliases = [aws.us-east-1]
     }
   }
 }
@@ -17,7 +17,7 @@ resource "aws_acm_certificate" "fe" {
   domain_name = var.domain_name
   # 추가 도메인 목록
   subject_alternative_names = var.subject_alternative_names
-  validation_method = var.validation_method
+  validation_method         = var.validation_method
 
   lifecycle {
     # 갱신시 새 인증서 생성후 기존 인증서 파괴

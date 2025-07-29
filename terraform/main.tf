@@ -13,44 +13,45 @@ provider "aws" {
 
 # ACM cert provider (Cloudfront = us-east-1 인증서만 사용 가능)
 provider "aws" {
-  alias = "us-east-1"
+  alias  = "us-east-1"
   region = "us-east-1"
+}
+
+locals {
+  # ACM 인증서에 사용될 SAN 목록 정의
+  acm_sans = ["*.${var.domain_name}"]
 }
 
 module "s3" {
   source = "./modules/s3"
 
   bucket_name = var.bucket_name
-  prefix = var.prefix
+  prefix      = var.prefix
   # cloudfront_distribution_arn = module.cloudfront.distribution_arn
 }
 
 module "acm" {
   source = "./modules/acm"
-  
+
   providers = {
     aws.us-east-1 = aws.us-east-1
   }
 
-  domain_name = var.domain_name
+  domain_name               = var.domain_name
   subject_alternative_names = ["*.${var.domain_name}"]
-  validation_method = "DNS"
-  prefix = var.prefix
+  validation_method         = "DNS"
+  prefix                    = var.prefix
 }
 
 module "cloudfront" {
   source = "./modules/cloudfront"
 
-  prefix = var.prefix
-  bucket_id = module.s3.bucket_id
+  prefix                      = var.prefix
+  bucket_id                   = module.s3.bucket_id
+  bucket_arn                  = module.s3.bucket_arn
   bucket_regional_domain_name = module.s3.bucket_regional_domain_name
-  domain_names = [ var.domain_name, "www.${var.domain_name}" ]
-  acm_certificate_arn = module.acm.certificate_arn
-
-  depends_on = [
-    module.acm,
-    aws_acm_certificate_validation.fe
-  ]
+  domain_names                = [var.domain_name, "www.${var.domain_name}"]
+  acm_certificate_arn         = module.acm.certificate_arn
 }
 
 
@@ -58,101 +59,29 @@ module "cloudfront" {
 module "route53" {
   source = "./modules/route53"
 
-  domain_name = var.domain_name
+  providers = {
+    aws.us-east-1 = aws.us-east-1
+  }
+
+  domain_name     = var.domain_name
   subdomain_names = ["", "www"]
-}
+  # ACM 인증이 필요한 전체 도메인 목록을 전달
+  acm_domains_for_validation                = concat([var.domain_name], local.acm_sans)
+  acm_certificate_domain_validation_options = module.acm.domain_validation_options
+  acm_certificate_arn                       = module.acm.certificate_arn
+  cloudfront_distribution_domain_name       = module.cloudfront.distribution_domain_name
+  cloudfront_distribution_hosted_zone_id    = module.cloudfront.distribution_hosted_zone_id
 
-# ACM cert validation
-resource "aws_acm_certificate_validation" "fe" {
-  provider = aws.us-east-1
-
-  certificate_arn = module.acm.certificate_arn
-  # dns 검증용 레코드 fqdn(fully qualified domain name) 목록
-  validation_record_fqdns = [ for record in aws_route53_record.cert_validation : record.fqdn ]
-
-  timeouts {
-    # 인증서 검증 완료까지 대기 시간
-    create = "30m"
-  }
-
-  depends_on = [ module.route53 ]
-}
-
-# Create DNS records for ACM validation
-resource "aws_route53_record" "cert_validation" {
-  for_each = { for dvo in module.acm.domain_validation_options : dvo.domain_name => dvo }
-  name           = each.value.resource_record_name
-  type           = each.value.resource_record_type
-  records        = [ each.value.resource_record_value ]
-  ttl            = 60
-  zone_id        = data.aws_route53_zone.main.zone_id
-  allow_overwrite = true
-}
-
-data "aws_route53_zone" "main" {
-  name = var.domain_name
-}
-
-resource "aws_route53_record" "frontend_a" {
-  for_each = toset(["", "www"])
-  zone_id  = data.aws_route53_zone.main.zone_id
-  name     = each.value == "" ? var.domain_name : "${each.value}.${var.domain_name}"
-  type     = "A"
-  alias {
-    name                   = module.cloudfront.distribution_domain_name
-    zone_id                = module.cloudfront.distribution_hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "frontend_aaaa" {
-  for_each = toset(["", "www"])
-  zone_id  = data.aws_route53_zone.main.zone_id
-  name     = each.value == "" ? var.domain_name : "${each.value}.${var.domain_name}"
-  type     = "AAAA"
-  alias {
-    name                   = module.cloudfront.distribution_domain_name
-    zone_id                = module.cloudfront.distribution_hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-# CloudFront Origin access control 통해서만 버킷 객체 읽을 수 있도록 정책 설정
-resource "aws_s3_bucket_policy" "fe" {
-  bucket = module.s3.bucket_id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        # CloudFront에 권한 부여
-        Principal = {
-          Service = "cloudfront.amazonaws.com"
-        }
-        # Resource의 S3 getObject 권한
-        Action   = "s3:GetObject"
-        Resource = "${module.s3.bucket_arn}/*"
-
-        # "AWS:SourceArn"의 값이 var.cloudfront_distribution_arn와 똑같을 때만
-        Condition = {
-          StringEquals = {
-            "AWS:SourceArn" = module.cloudfront.distribution_arn
-          }
-        }
-      }
-    ]
-    }
-  )
+  depends_on = [module.acm]
 }
 
 module "github_oidc" {
   source = "./modules/oidc"
 
-  prefix = var.prefix
+  prefix               = var.prefix
   allowed_repositories = var.github_allowed_repo
-  bucket_arn = module.s3.bucket_arn
-  distribution_arn = module.cloudfront.distribution_arn
+  bucket_arn           = module.s3.bucket_arn
+  distribution_arn     = module.cloudfront.distribution_arn
 }
 
 # S3 퍼블릭 전면 차단

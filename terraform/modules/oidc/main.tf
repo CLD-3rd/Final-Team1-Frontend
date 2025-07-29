@@ -37,7 +37,7 @@ resource "aws_iam_role" "github" {
           StringLike = {
             # 토큰 subject가 특정 레포에서 발급된 것만 허용
             "token.actions.githubusercontent.com:sub" = [
-                for repo in var.allowed_repositories : "repo:${repo}:*"
+              for repo in var.allowed_repositories : "repo:${repo}:*"
             ]
           }
         }
@@ -70,7 +70,7 @@ resource "aws_iam_role_policy" "github" {
           "s3:PutObjectAcl"
         ]
         Resource = [
-            var.bucket_arn, "${var.bucket_arn}/*"
+          var.bucket_arn, "${var.bucket_arn}/*"
         ]
       },
       {
@@ -80,7 +80,7 @@ resource "aws_iam_role_policy" "github" {
           "cloudfront:CreateInvalidation"
         ]
         Resource = [
-            var.distribution_arn
+          var.distribution_arn
         ]
       }
     ]

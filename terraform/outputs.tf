@@ -1,16 +1,16 @@
 output "cloudfront_distribution_domain" {
   description = "CloudFront distribution domain"
-  value = module.cloudfront.distribution_domain_name
+  value       = module.cloudfront.distribution_domain_name
 }
 
 output "s3_bucket_id" {
   description = "S3 bukcet ID"
-  value = module.s3.bucket_id
+  value       = module.s3.bucket_id
 }
 
 output "s3_bucket_domain_name" {
-    description = "S3 bukcet domain name"
-  value = module.s3.bucket_domain_name
+  description = "S3 bukcet domain name"
+  value       = module.s3.bucket_domain_name
 }
 
 output "web_urls" {
@@ -23,7 +23,7 @@ output "web_urls" {
 
 output "acm_certificate_status" {
   description = "ACM certificate status"
-  value = module.acm.certificate_status
+  value       = module.acm.certificate_status
 }
 
 output "github_role_arn" {
