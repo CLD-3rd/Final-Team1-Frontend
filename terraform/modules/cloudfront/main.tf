@@ -5,7 +5,7 @@ resource "aws_cloudfront_origin_access_control" "fe" {
   description                       = "OAC for ${var.prefix}-s3"
   origin_access_control_origin_type = "s3"
   # 요청마다 서명
-  signing_behavior = "ALWAYS"
+  signing_behavior = "always"
   signing_protocol = "sigv4"
 }
 
