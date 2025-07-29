@@ -60,8 +60,6 @@ module "route53" {
 
   domain_name = var.domain_name
   subdomain_names = ["", "www"]
-  cloudfront_domain_name = module.cloudfront.distribution_domain_name
-  cloudfront_hosted_zone_id = module.cloudfront.distribution_hosted_zone_id
   acm_certificate_domain_validation_options = module.acm.domain_validation_options
 }
 

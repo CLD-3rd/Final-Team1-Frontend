@@ -8,15 +8,6 @@ variable "subdomain_names" {
   type = list(string)
 }
 
-variable "cloudfront_domain_name" {
-  description = "Cloudfront distribution domain name"
-  type = string
-}
-
-variable "cloudfront_hosted_zone_id" {
-  description = "Cloudfront hosting zone ID"
-  type = string
-}
 
 variable "acm_certificate_domain_validation_options" {
   description = "ACM domain validation"
