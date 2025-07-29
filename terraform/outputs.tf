@@ -1,19 +1,19 @@
-output "s3_bucket_id" {
+output "S3_BUCKET_NAME" {
   description = "GitHub secrets(S3_BUCKET_NAME) - S3 bukcet ID"
   value       = module.s3.bucket_id
 }
 
-output "github_role_arn" {
+output "AWS_ROLE_ARN" {
   description = "GitHub secrets(AWS_ROLE_ARN) - Github IAM Role ARN"
   value       = module.github_oidc.role_arn
 }
 
-output "cloudfront_distribution_id" {
+output "CLOUDFRONT_DISTRIBUTION_ID" {
   description = "GitHub secrets(CLOUDFRONT_DISTRIBUTION_ID) - Cloudfront distribution ID"
   value       = module.cloudfront.distribution_id
 }
 
-output "aws_region" {
+output "AWS_REGION" {
   description = "GitHub secrets(AWS_REGION) - AWS region"
   value = var.aws_region
 }
