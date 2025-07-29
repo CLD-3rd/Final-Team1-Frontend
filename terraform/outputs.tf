@@ -8,7 +8,7 @@ output "s3_bucket_id" {
   value = module.s3.bucket_id
 }
 
-output "s3_bucket domain name" {
+output "s3_bucket_domain_name" {
     description = "S3 bukcet domain name"
   value = module.s3.bucket_domain_name
 }
