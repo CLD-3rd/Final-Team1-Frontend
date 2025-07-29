@@ -71,28 +71,11 @@ resource "aws_s3_bucket_ownership_controls" "fe_log" {
   }
 }
 
-resource "aws_s3_bucket_policy" "fe_log" {
-  bucket = aws_s3_bucket.fe_log.id
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = { Service = "delivery.logs.amazonaws.com" },
-        Action = "s3:PutObject",
-        Resource = "${aws_s3_bucket.fe_log.arn}/*",
-        Condition = {
-          StringEquals = {
-            "s3:x-amz-acl" = "bucket-owner-full-control"
-          }
-        }
-      },
-      {
-        Effect = "Allow",
-        Principal = { Service = "delivery.logs.amazonaws.com" },
-        Action = "s3:GetBucketAcl",
-        Resource = aws_s3_bucket.fe_log.arn
-      }]
-  })
+# AWS log delivery 서비스가 로그를 쓸 수 있도록 acl 설정
+resource "aws_s3_bucket_acl" "fe_log" {
+  # 소유권 설정 먼저 적용
   depends_on = [aws_s3_bucket_ownership_controls.fe_log]
+
+  bucket = aws_s3_bucket.fe_log.id
+  acl    = "log-delivery-write"
 }
