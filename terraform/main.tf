@@ -21,7 +21,7 @@ module "acm" {
   source = "./modules/acm"
   
   providers = {
-    "aws.us-east-1" = aws.us-east-1
+    aws.us-east-1 = aws.us-east-1
   }
 
   domain_name = var.domain_name
@@ -61,6 +61,22 @@ module "route53" {
   cloudfront_domain_name = module.cloudfront.distribution_domain_name
   cloudfront_hosted_zone_id = module.cloudfront.distribution_hosted_zone_id
   acm_certificate_domain_validation_options = module.acm.domain_validation_options
+}
+
+# ACM cert validation
+resource "aws_acm_certificate_validation" "fe" {
+  provider = aws.us-east-1
+
+  certificate_arn = module.acm.certificate_arn
+  # dns 검증용 레코드 fqdn(fully qualified domain name) 목록
+  validation_record_fqdns = [ for record in module.route53.cert_validation_records : record.fqdn ]
+
+  timeouts {
+    # 인증서 검증 완료까지 대기 시간
+    create = "30m"
+  }
+
+  depends_on = [ module.route53 ]
 }
 
 module "github_oidc" {

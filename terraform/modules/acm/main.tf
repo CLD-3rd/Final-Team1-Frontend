@@ -29,16 +29,3 @@ resource "aws_acm_certificate" "fe" {
   }
 }
 
-# ACM cert validation
-resource "aws_acm_certificate_validation" "fe" {
-  provider = aws.us-east-1
-
-  certificate_arn = aws_acm_certificate.fe.arn
-  # dns 검증용 레코드 fqdn(fully qualified domain name) 목록
-  validation_record_fqdns = var.validation_record_fqdns
-
-  timeouts {
-    # 인증서 검증 완료까지 대기 시간
-    create = "30m"
-  }
-}
