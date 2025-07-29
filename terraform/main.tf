@@ -26,9 +26,9 @@ locals {
 module "s3" {
   source = "./modules/s3"
 
-  bucket_name = var.bucket_name
+  bucket_name     = var.bucket_name
   log_bucket_name = var.log_bucket_name
-  prefix      = var.prefix
+  prefix          = var.prefix
 }
 
 module "acm" {
@@ -41,8 +41,8 @@ module "acm" {
   domain_name               = var.domain_name
   subject_alternative_names = ["*.${var.domain_name}"]
   # DNS 방식으로 도메인 검증
-  validation_method         = "DNS"
-  prefix                    = var.prefix
+  validation_method = "DNS"
+  prefix            = var.prefix
 }
 
 module "cloudfront" {
@@ -54,7 +54,7 @@ module "cloudfront" {
   bucket_regional_domain_name = module.s3.bucket_regional_domain_name
   domain_names                = [var.domain_name, "www.${var.domain_name}"]
   acm_certificate_arn         = module.acm.certificate_arn
-  log_bucket_domain_name = module.s3.log_bucket_domain_name
+  log_bucket_domain_name      = module.s3.log_bucket_domain_name
 }
 
 module "route53" {

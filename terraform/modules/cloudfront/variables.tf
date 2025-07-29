@@ -31,6 +31,6 @@ variable "domain_names" {
 
 variable "log_bucket_domain_name" {
   description = "S3 bucket name for log"
-  type = string
-  default = ""
+  type        = string
+  default     = ""
 }

@@ -15,7 +15,7 @@ output "CLOUDFRONT_DISTRIBUTION_ID" {
 
 output "AWS_REGION" {
   description = "GitHub secrets(AWS_REGION) - AWS region"
-  value = var.aws_region
+  value       = var.aws_region
 }
 
 output "web_urls" {

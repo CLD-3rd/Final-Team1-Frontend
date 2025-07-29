@@ -26,8 +26,8 @@ resource "aws_cloudfront_distribution" "fe" {
 
   logging_config {
     include_cookies = false
-    bucket = var.log_bucket_domain_name
-    prefix = "${var.prefix}/"
+    bucket          = var.log_bucket_domain_name
+    prefix          = "${var.prefix}/"
   }
 
   # 기본 캐싱 정책

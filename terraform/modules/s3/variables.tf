@@ -10,5 +10,5 @@ variable "prefix" {
 
 variable "log_bucket_name" {
   description = "S3 bucket name for log"
-  type = string
+  type        = string
 }

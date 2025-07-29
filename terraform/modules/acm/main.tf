@@ -18,7 +18,7 @@ resource "aws_acm_certificate" "fe" {
   # 추가 도메인 목록
   subject_alternative_names = var.subject_alternative_names
   # 도메인 소유권 검증 방식 (DNS or EMAIL)
-  validation_method         = var.validation_method
+  validation_method = var.validation_method
 
   lifecycle {
     # 갱신시 새 인증서 생성후 기존 인증서 파괴
