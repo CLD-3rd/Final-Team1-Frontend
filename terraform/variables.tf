@@ -1,7 +1,7 @@
 variable "aws_region" {
     description = "AWS Region"
     type = string
-    default = "ap-northeast-2"
+    default = "us-east-1"
 }
 
 variable "prefix" {
@@ -21,7 +21,7 @@ variable "bucket_name" {
 }
 
 variable "github_allowed_repo" {
-  description = "Allowed github repo list"
+  description = "Allowed github repo list (username/repo-name)"
   type = list(string)
-  default = [ ]
+  default = [ "jyoungmin-com/Final-Team1-Frontend-test" ]
 }
