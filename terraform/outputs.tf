@@ -14,8 +14,11 @@ output "s3_bucket_domain_name" {
 }
 
 output "web_urls" {
-  description = "Website URL"
-  value = module.route53.fe_urls
+  description = "Frontend URLs"
+  value = [
+    "https://${var.domain_name}",
+    "https://www.${var.domain_name}"
+  ]
 }
 
 output "acm_certificate_status" {

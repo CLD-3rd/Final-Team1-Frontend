@@ -8,14 +8,6 @@ output "name_servers" {
   value       = data.aws_route53_zone.main.name_servers
 }
 
-output "fe_urls" {
-  description = "Frontend url list"
-  value = [
-    for subdomain in var.subdomain_names :
-    subdomain == "" ? "https://${var.domain_name}" : "https://${subdomain}.${var.domain_name}"
-
-  ]
-}
 
 output "cert_validation_records" {
   description = "ACM certificate validation record"

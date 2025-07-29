@@ -81,6 +81,34 @@ resource "aws_acm_certificate_validation" "fe" {
   depends_on = [ module.route53 ]
 }
 
+data "aws_route53_zone" "main" {
+  name = var.domain_name
+}
+
+resource "aws_route53_record" "frontend_a" {
+  for_each = toset(["", "www"])
+  zone_id  = data.aws_route53_zone.main.zone_id
+  name     = each.value == "" ? var.domain_name : "${each.value}.${var.domain_name}"
+  type     = "A"
+  alias {
+    name                   = module.cloudfront.distribution_domain_name
+    zone_id                = module.cloudfront.distribution_hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "frontend_aaaa" {
+  for_each = toset(["", "www"])
+  zone_id  = data.aws_route53_zone.main.zone_id
+  name     = each.value == "" ? var.domain_name : "${each.value}.${var.domain_name}"
+  type     = "AAAA"
+  alias {
+    name                   = module.cloudfront.distribution_domain_name
+    zone_id                = module.cloudfront.distribution_hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
 # CloudFront Origin access control 통해서만 버킷 객체 읽을 수 있도록 정책 설정
 resource "aws_s3_bucket_policy" "fe" {
   bucket = aws_s3_bucket.fe.id
