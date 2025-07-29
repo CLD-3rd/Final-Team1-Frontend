@@ -109,7 +109,7 @@ resource "aws_route53_record" "frontend_aaaa" {
 
 # CloudFront Origin access control 통해서만 버킷 객체 읽을 수 있도록 정책 설정
 resource "aws_s3_bucket_policy" "fe" {
-  bucket = aws_s3_bucket.fe.id
+  bucket = module.s3.bucket_id
 
   policy = jsonencode({
     Version = "2012-10-17"
