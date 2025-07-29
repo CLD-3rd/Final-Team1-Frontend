@@ -1,7 +1,9 @@
 name: Deploy FE to AWS
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - dev
 
 
 permissions:
