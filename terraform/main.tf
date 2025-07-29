@@ -60,7 +60,6 @@ module "route53" {
 
   domain_name = var.domain_name
   subdomain_names = ["", "www"]
-  acm_certificate_domain_validation_options = module.acm.domain_validation_options
 }
 
 # ACM cert validation
@@ -69,7 +68,7 @@ resource "aws_acm_certificate_validation" "fe" {
 
   certificate_arn = module.acm.certificate_arn
   # dns 검증용 레코드 fqdn(fully qualified domain name) 목록
-  validation_record_fqdns = [ for record in module.route53.cert_validation_records : record.fqdn ]
+  validation_record_fqdns = [ for record in aws_route53_record.cert_validation : record.fqdn ]
 
   timeouts {
     # 인증서 검증 완료까지 대기 시간
@@ -77,6 +76,17 @@ resource "aws_acm_certificate_validation" "fe" {
   }
 
   depends_on = [ module.route53 ]
+}
+
+# Create DNS records for ACM validation
+resource "aws_route53_record" "cert_validation" {
+  for_each = { for dvo in module.acm.domain_validation_options : dvo.domain_name => dvo }
+  name           = each.value.resource_record_name
+  type           = each.value.resource_record_type
+  records        = [ each.value.resource_record_value ]
+  ttl            = 60
+  zone_id        = data.aws_route53_zone.main.zone_id
+  allow_overwrite = true
 }
 
 data "aws_route53_zone" "main" {

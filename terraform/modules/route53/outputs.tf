@@ -9,7 +9,3 @@ output "name_servers" {
 }
 
 
-output "cert_validation_records" {
-  description = "ACM certificate validation record"
-  value = aws_route53_record.cert_validation
-}

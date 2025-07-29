@@ -28,6 +28,6 @@ output "acm_certificate_status" {
 
 output "github_role_arn" {
   description = "Github IAM Role ARN (Paste to github secret)"
-  value = module.github_oidc[0].role_arn
+  value       = module.github_oidc.role_arn
 }
 
