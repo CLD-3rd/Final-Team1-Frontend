@@ -17,8 +17,3 @@ output "domain_validation_options" {
   description = "Domain validation option"
   value = aws_acm_certificate.fe.domain_validation_options
 }
-
-output "validation_id" {
-  description = "ACM cert validation ID"
-  value = aws_acm_certificate_validation.fe.id
-}

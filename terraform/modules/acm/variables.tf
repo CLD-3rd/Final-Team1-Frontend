@@ -19,9 +19,3 @@ variable "validation_method" {
   type = string
   default = "DNS"
 }
-
-variable "validation_record_fqdns" {
-  description = "FQDN list for DNS validation"
-  type = list(string)
-  default = [ ]
-}

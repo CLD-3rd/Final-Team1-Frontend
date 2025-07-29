@@ -17,6 +17,14 @@ provider "aws" {
   region = "us-east-1"
 }
 
+module "s3" {
+  source = "./modules/s3"
+
+  bucket_name = var.bucket_name
+  prefix = var.prefix
+  # cloudfront_distribution_arn = module.cloudfront.distribution_arn
+}
+
 module "acm" {
   source = "./modules/acm"
   
@@ -27,10 +35,7 @@ module "acm" {
   domain_name = var.domain_name
   subject_alternative_names = ["*.${var.domain_name}"]
   validation_method = "DNS"
-  validation_record_fqdns = [ for record in module.route53.cert_calidation_records : record.fqdn ]
   prefix = var.prefix
-
-  depends_on = [ module.route53 ]
 }
 
 module "cloudfront" {
@@ -45,13 +50,7 @@ module "cloudfront" {
   depends_on = [ module.acm ]
 }
 
-module "s3" {
-  source = "./modules/s3"
 
-  bucket_name = var.bucket_name
-  prefix = var.prefix
-  # cloudfront_distribution_arn = module.cloudfront.distribution_arn
-}
 
 module "route53" {
   source = "./modules/route53"
