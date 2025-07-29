@@ -56,14 +56,43 @@ resource "aws_s3_bucket" "fe_log" {
 resource "aws_s3_bucket_public_access_block" "fe_log" {
   bucket = aws_s3_bucket.fe_log.id
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
+  # 버킷 acl 활성화
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
   restrict_public_buckets = true
 }
 
-# AWS log delivery service가 로그 쓸 수 있도록 acl 설정
-resource "aws_s3_bucket_acl" "fe_log_bucket_acl" {
+# 버킷 객체 소유권 => 버킷 owner, cloudfront가 로그 업로드 허용
+resource "aws_s3_bucket_ownership_controls" "fe_log" {
   bucket = aws_s3_bucket.fe_log.id
-  acl    = "log-delivery-write"
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_policy" "fe_log" {
+  bucket = aws_s3_bucket.fe_log.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = { Service = "delivery.logs.amazonaws.com" },
+        Action = "s3:PutObject",
+        Resource = "${aws_s3_bucket.fe_log.arn}/*",
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      },
+      {
+        Effect = "Allow",
+        Principal = { Service = "delivery.logs.amazonaws.com" },
+        Action = "s3:GetBucketAcl",
+        Resource = aws_s3_bucket.fe_log.arn
+      }]
+  })
+  depends_on = [aws_s3_bucket_ownership_controls.fe_log]
 }
