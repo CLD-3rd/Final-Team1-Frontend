@@ -42,12 +42,15 @@ module "cloudfront" {
   source = "./modules/cloudfront"
 
   prefix = var.prefix
-  bucket_id = module.bucket_id
+  bucket_id = module.s3.bucket_id
   bucket_regional_domain_name = module.s3.bucket_regional_domain_name
   domain_names = [ var.domain_name, "www.${var.domain_name}" ]
   acm_certificate_arn = module.acm.certificate_arn
 
-  depends_on = [ module.acm ]
+  depends_on = [
+    module.acm,
+    aws_acm_certificate_validation.fe
+  ]
 }
 
 
