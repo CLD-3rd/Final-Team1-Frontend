@@ -1,7 +1,7 @@
 // API 호출을 위한 기본 설정
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
-const CONTENT_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8081/api"
-const TEST_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_SERVER_URL || "http://localhost:8082/api"
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080"
+const CONTENT_SERVER_BASE_URL = import.meta.env.VITE_CONTENT_API_URL || "http://localhost:8081/api"
+const INFO_SERVER_BASE_URL = import.meta.env.VITE_INFO_SERVER_API_URL || "http://localhost:8082/api"
 
 
 import { MOCK_RECOMMENDATIONS } from "./mock-data"
@@ -91,7 +91,7 @@ const contentApiRequest = async (endpoint, options = {}) => {
 
 // 8082 테스트 서버용 요청 함수 추가
 const testApiRequest = async (endpoint, options = {}) => {
-  const url = `${TEST_SERVER_BASE_URL}${endpoint}`;
+  const url = `${INFO_SERVER_BASE_URL}${endpoint}`;
   const token = localStorage.getItem("accessToken");
 
   const defaultOptions = {
