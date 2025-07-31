@@ -37,14 +37,14 @@ resource "aws_cloudfront_distribution" "fe" {
     target_origin_id = var.bucket_id
 
     forwarded_values {
-      # query 스트링 포워딩 안함
-      query_string = false
+      
+      query_string = true
       # CORS 처리 위해 Origin, Access-Control-* 헤더만 전달
       headers = ["Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"]
 
       cookies {
-        # 쿠키 전달 안함
-        forward = "none"
+        
+        forward = "all"
       }
     }
 
