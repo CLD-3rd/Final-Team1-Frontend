@@ -126,7 +126,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <div className="text-center text-sm bg-blue-50 p-4 rounded-lg">
+              {/* <div className="text-center text-sm bg-blue-50 p-4 rounded-lg">
                 <p className="font-semibold text-blue-800 mb-2">🧪 테스트 계정</p>
                 <div className="space-y-1 text-blue-700">
                   <p>
@@ -137,7 +137,7 @@ export default function LoginPage() {
                   </p>
                 </div>
                 <p className="text-xs text-blue-600 mt-2">* 백엔드 서버가 없어도 테스트 가능합니다</p>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </div>
