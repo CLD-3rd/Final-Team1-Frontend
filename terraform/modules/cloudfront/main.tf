@@ -24,11 +24,11 @@ resource "aws_cloudfront_distribution" "fe" {
   default_root_object = "index.html"
   aliases             = var.domain_names
 
-  logging_config {
-    include_cookies = false
-    bucket          = var.log_bucket_domain_name
-    prefix          = "${var.prefix}/"
-  }
+  # logging_config {
+  #   include_cookies = false
+  #   bucket          = var.log_bucket_domain_name
+  #   prefix          = "${var.prefix}/"
+  # }
 
   # 기본 캐싱 정책
   default_cache_behavior {
