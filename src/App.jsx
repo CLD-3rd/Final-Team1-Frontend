@@ -1,9 +1,12 @@
-import React from "react"
+// src/App.jsx
+
+import React, { useEffect } from "react"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./components/auth-provider"
 import { Toaster } from "./components/ui/toaster"
+import { getInitialTheme, setTheme } from "./utils/theme"
 
-// 페이지 컴포넌트 임포트
+// 페이지 컴포넌트
 import HomePage from "./pages/HomePage"
 import TestPage from "./pages/TestPage"
 import ResultPage from "./pages/ResultPage"
@@ -12,6 +15,11 @@ import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 
 function App() {
+  useEffect(() => {
+    const initialTheme = getInitialTheme()
+    setTheme(initialTheme)
+  }, [])
+
   return (
     <Router>
       <AuthProvider>

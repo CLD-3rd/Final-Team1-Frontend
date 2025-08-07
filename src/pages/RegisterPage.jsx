@@ -7,7 +7,6 @@ import { Button } from "../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input"
 import { Label } from "../components/ui/label"
-import { Separator } from "../components/ui/separator"
 import { useToast } from "../hooks/use-toast"
 import { authAPI } from "../lib/api"
 
@@ -21,7 +20,6 @@ export default function RegisterPage() {
   const navigate = useNavigate()
   const { toast } = useToast()
 
-  // 중복확인
   const checkAccountId = async () => {
     if (!accountId.trim()) {
       toast({
@@ -34,9 +32,7 @@ export default function RegisterPage() {
     try {
       const response = await authAPI.checkAccountId(accountId)
       setIsAccountIdValid(true)
-      toast({
-        description: "사용 가능한 아이디입니다."
-      })
+      toast({ description: "사용 가능한 아이디입니다." })
     } catch (error) {
       setIsAccountIdValid(false)
       toast({
@@ -70,9 +66,7 @@ export default function RegisterPage() {
     try {
       const response = await authAPI.register(username, accountId, password)
       if (response.success) {
-        toast({
-          description: "회원가입이 완료되었습니다."
-        })
+        toast({ description: "회원가입이 완료되었습니다." })
         navigate("/login")
       }
     } catch (error) {
@@ -86,13 +80,13 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground dark:bg-background">
       <Header />
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto">
-          <Card>
+          <Card className="bg-white dark:bg-muted text-gray-900 dark:text-foreground">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">회원가입</CardTitle>
+              <CardTitle className="text-2xl dark:text-white">회원가입</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -119,10 +113,7 @@ export default function RegisterPage() {
                       }}
                       required
                     />
-                    <Button 
-                      type="button" 
-                      onClick={checkAccountId}
-                    >
+                    <Button type="button" onClick={checkAccountId}>
                       중복확인
                     </Button>
                   </div>
@@ -150,11 +141,7 @@ export default function RegisterPage() {
                     required
                   />
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={!isAccountIdValid || isLoading}
-                >
+                <Button type="submit" className="w-full" disabled={!isAccountIdValid || isLoading}>
                   {isLoading ? "처리중..." : "회원가입"}
                 </Button>
               </form>

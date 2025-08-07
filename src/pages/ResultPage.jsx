@@ -1,88 +1,69 @@
 "use client"
 
-import React from 'react'
-import { useState, useEffect } from "react"
-import { useSearchParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom" // useNavigate 임포트
-import { useAuth } from "../components/auth-provider" // 상대 경로로 변경
-import { Header } from "../components/header" // 상대 경로로 변경
-import { Button } from "../components/ui/button" // 상대 경로로 변경
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card" // 상대 경로로 변경
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs" // 상대 경로로 변경
-import { testAPI,contentAPI   } from "../lib/api" // 상대 경로로 변경
-import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
+import React, { useState, useEffect } from "react"
+import { useSearchParams, useNavigate } from "react-router-dom"
+import { useAuth } from "../components/auth-provider"
+import { Header } from "../components/header"
+import { Button } from "../components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { testAPI, contentAPI } from "../lib/api"
+import { useToast } from "../hooks/use-toast"
 
 export default function ResultPage() {
   const { user, isLoading } = useAuth()
-  const navigate = useNavigate() // useRouter 대신 useNavigate 사용
-  const [latestResult, setLatestResult] = useState(null);     // 👉 상단 성향용
-  const [testDetail, setTestDetail] = useState(null); 
+  const navigate = useNavigate()
+  const [latestResult, setLatestResult] = useState(null)
+  const [testDetail, setTestDetail] = useState(null)
   const [recommendations, setRecommendations] = useState(null)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
-  const [searchParams] = useSearchParams();
-  const testId = searchParams.get("testId");
-console.log("넘겨받은 testId:", testId);
+  const [searchParams] = useSearchParams()
+  const testId = searchParams.get("testId")
 
   useEffect(() => {
-  const fetchBoth = async () => {
-    if (!user || isLoading) return;
+    const fetchBoth = async () => {
+      if (!user || isLoading) return
 
-    try {
-      // 1. testId로 상세 테스트 결과 조회
-      if (testId) {
-        const res = await contentAPI.getTestHistory(testId);
-        console.log("✅ testId 기반 결과:", res);
-        setTestDetail(res);
-        setRecommendations(res.Recommend);
-        console.log("✅ testId 기반 결과- Recommend만:", res.Recommend);
+      try {
+        if (testId) {
+          const res = await contentAPI.getTestHistory(testId)
+          setTestDetail(res)
+          setRecommendations(res.Recommend)
+        }
+
+        const history = await testAPI.getTestResultHistory(user.id)
+        if (history && history.length > 0) {
+          const sorted = history.sort((a, b) => b.testId - a.testId)
+          setLatestResult(sorted[0])
+        }
+      } catch (error) {
+        toast({
+          title: "오류",
+          description: "결과를 불러오는 중 문제가 발생했습니다.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
       }
-
-       // 2. user.id로 테스트 기록 조회
-      const history = await testAPI.getTestResultHistory(user.id);
-      console.log("📦 전체 기록 목록:", history);
-
-      if (history && history.length > 0) {
-        const sorted = history.sort((a, b) => b.testId - a.testId);
-        const latest = sorted[0];
-        console.log("🔥 testId 가장 큰 최신 기록:", latest);
-        setLatestResult(latest); //최신 결과 
-      }
-
-    } catch (error) {
-      console.error("❌ 데이터 요청 실패:", error);
-      toast({
-        title: "오류",
-        description: "결과를 불러오는 중 문제가 발생했습니다.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
-  };
 
-  fetchBoth();
-}, [user, isLoading, testId]);
-
+    fetchBoth()
+  }, [user, isLoading, testId])
 
   if (isLoading || loading) {
     return <div className="flex justify-center items-center min-h-screen">로딩 중...</div>
   }
 
-    if (!user || !recommendations) {
-    return null
-  }
-  // if (!user || !testResult || !recommendations) {
-  //   return null
-  // }
+  if (!user || !recommendations) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground dark:bg-background">
       <Header />
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* 상단 절반 - 성향 결과 */}
+          {/* 상단 - 성향 결과 */}
           <div className="h-96 mb-8">
             <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white h-full">
               <CardHeader className="text-center">
@@ -100,8 +81,8 @@ console.log("넘겨받은 testId:", testId);
             </Card>
           </div>
 
-          {/* 하단 절반 - 추천 컨텐츠 */}
-          <Card>
+          {/* 하단 - 추천 콘텐츠 */}
+          <Card className="bg-white dark:bg-muted">
             <CardHeader>
               <CardTitle className="text-2xl text-center">맞춤 추천 컨텐츠</CardTitle>
             </CardHeader>
@@ -113,10 +94,14 @@ console.log("넘겨받은 testId:", testId);
                   <TabsTrigger value="music">🎵 음악</TabsTrigger>
                 </TabsList>
 
+                {/* 영화 */}
                 <TabsContent value="movies" className="mt-6">
                   <div className="grid gap-4">
                     {recommendations?.Movie?.map((movie, index) => (
-                      <div key={index} className="flex items-start gap-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                      <div
+                        key={index}
+                        className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm"
+                      >
                         {movie.poster_path && (
                           <img
                             src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
@@ -126,15 +111,13 @@ console.log("넘겨받은 testId:", testId);
                         )}
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold">제목: {movie.title}</h3>
-
                           {movie.release_date && (
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                               개봉일: {new Date(movie.release_date).toLocaleDateString("ko-KR")}
                             </p>
                           )}
-
                           {movie.overview && (
-                            <p className="text-sm text-gray-700 mt-2 line-clamp-4">
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 line-clamp-4">
                               설명: {movie.overview}
                             </p>
                           )}
@@ -144,10 +127,14 @@ console.log("넘겨받은 testId:", testId);
                   </div>
                 </TabsContent>
 
+                {/* 책 */}
                 <TabsContent value="books" className="mt-6">
                   <div className="grid gap-4">
                     {recommendations?.Book?.map((book, index) => (
-                      <div key={index} className="flex items-start gap-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                      <div
+                        key={index}
+                        className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm"
+                      >
                         {book.image && (
                           <img
                             src={book.image}
@@ -157,18 +144,28 @@ console.log("넘겨받은 testId:", testId);
                         )}
                         <div>
                           <h3 className="text-lg font-semibold">{book.title}</h3>
-                          {book.author && <p className="text-sm text-gray-700 mt-1">저자: {book.author}</p>}
-                          {book.description && <p className="text-sm text-gray-600 mt-2">설명: {book.description}</p>}
+                          {book.author && (
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">저자: {book.author}</p>
+                          )}
+                          {book.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                              설명: {book.description}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
                 </TabsContent>
 
+                {/* 음악 */}
                 <TabsContent value="music" className="mt-6">
                   <div className="grid gap-4">
                     {recommendations?.Music?.map((music, index) => (
-                      <div key={index} className="flex items-start gap-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                      <div
+                        key={index}
+                        className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm"
+                      >
                         {music.album && (
                           <img
                             src={music.album}
@@ -179,14 +176,15 @@ console.log("넘겨받은 testId:", testId);
                         <div>
                           <h3 className="text-lg font-semibold">제목: {music.title}</h3>
                           {music.artist && (
-                            <p className="text-sm text-gray-700 mt-1">아티스트: {music.artist}</p>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                              아티스트: {music.artist}
+                            </p>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
                 </TabsContent>
-
               </Tabs>
             </CardContent>
           </Card>
