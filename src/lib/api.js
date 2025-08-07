@@ -320,9 +320,9 @@ export const contentAPI = {
 },
 
 //mypage 컨텐츠 히스토리 조회 api
-getMypage: async (userId) => {
+getMypage: async (userId, page, size) => {
   try {
-    return await contentApiRequest(`/test/history?userId=${encodeURIComponent(userId)}`);
+    return await contentApiRequest(`/test/history?userId=${encodeURIComponent(userId)}&page=${page}&size=${size}`);
   } catch (error) {
     console.log("Backend API not available, using localStorage (dev mode)...");
 

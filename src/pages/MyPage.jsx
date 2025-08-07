@@ -20,6 +20,10 @@ export default function MyPage() {
   const [resultHistory, setResultHistory] = useState([]);
   const [recommendations, setRecommendations] = useState(null);
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [pageSize] = useState(5)
+  const [pageLoading, setPageLoading] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -44,13 +48,23 @@ export default function MyPage() {
       }
 
 
-      // 3. 추천 히스토리 목록
-      const historyData = await contentAPI.getMypage(user.id);
+      // 3. 전체 테스트 결과 개수를 사용해서 총 페이지 수 계산
+      const totalResults = resultData ? resultData.length : 0;
+      const calculatedTotalPages = Math.max(1, Math.ceil(totalResults / pageSize));
+      setTotalPages(calculatedTotalPages);
+      console.log(`총 ${totalResults}개 결과, ${calculatedTotalPages} 페이지`);
+
+      // 4. 추천 히스토리 목록
+      const historyData = await contentAPI.getMypage(user.id, 0, pageSize);
       console.log("📦 마이페이지 추천 히스토리:", historyData);
 
-      // testId 기준 내림차순 정렬
-      const sortedHistory = historyData.sort((a, b) => b.testId - a.testId);
-      setHistory(sortedHistory); // ✅ 추천 히스토리 저장
+      if (historyData && historyData.length > 0) {
+        // testId 기준 내림차순 정렬
+        const sortedHistory = historyData.sort((a, b) => b.testId - a.testId);
+        setHistory(sortedHistory); // ✅ 추천 히스토리 저장
+      } else {
+        setHistory([]);
+      }
 
     } catch (err) {
       console.error("❌ 데이터 로딩 실패:", err);
@@ -70,6 +84,33 @@ export default function MyPage() {
     const getTestInfoById = (testId) => {
       return resultHistory.find(r => r.testId === testId);
     }
+
+  const goToPage = async (page) => {
+    if (page === currentPage || pageLoading || page < 0 || page >= totalPages) return;
+
+    setPageLoading(true);
+    try {
+      const pageData = await contentAPI.getMypage(user.id, page, pageSize);
+      
+      if (pageData && pageData.length > 0) {
+        const sortedPageData = pageData.sort((a, b) => b.testId - a.testId);
+        setHistory(sortedPageData);
+      } else {
+        setHistory([]);
+      }
+      
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("페이지 로드 실패:", error);
+      toast({
+        title: "오류",
+        description: "페이지를 불러오는 중 문제가 발생했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setPageLoading(false);
+    }
+  };
 
   const handleHistoryClick = (item) => {
     console.log("📝 상세보기 클릭됨:", item); 
@@ -168,6 +209,42 @@ export default function MyPage() {
                       </div>
                     );
                   })}
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 0 || pageLoading}
+                      >
+                        이전
+                      </Button>
+                      
+                      {Array.from({ length: totalPages }, (_, index) => (
+                        <Button
+                          key={index}
+                          variant={currentPage === index ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(index)}
+                          disabled={pageLoading}
+                          className={currentPage === index ? "bg-primary text-primary-foreground" : ""}
+                        >
+                          {pageLoading && currentPage === index ? "..." : index + 1}
+                        </Button>
+                      ))}
+                      
+                      <Button
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage >= totalPages - 1 || pageLoading}
+                      >
+                        다음
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -244,7 +321,7 @@ export default function MyPage() {
                       </div>
                     ))}
                   </div>
-                </TabsContent>                 
+                </TabsContent>
 
                   {/* Music 탭 */}
                   <TabsContent value="music" className="mt-6">
