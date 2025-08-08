@@ -1,66 +1,129 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAuth } from "../components/auth-provider"
-import { Header } from "../components/header"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
-import { Button } from "../components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { testAPI, authAPI, contentAPI } from "../lib/api"
-import { useToast } from "../hooks/use-toast"
+import React from 'react'
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom" // useNavigate 임포트
+import { useAuth } from "../components/auth-provider" // 상대 경로로 변경
+import { Header } from "../components/header" // 상대 경로로 변경
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card" // 상대 경로로 변경
+import { Button } from "../components/ui/button" // 상대 경로로 변경
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs" // 상대 경로로 변경
+import { testAPI, authAPI,contentAPI } from "../lib/api" // 상대 경로로 변경
+import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
 
 export default function MyPage() {
   const { user, isLoading } = useAuth()
-  const navigate = useNavigate()
+  const navigate = useNavigate() // useRouter 대신 useNavigate 사용
   const [history, setHistory] = useState([])
-  const [latestResult, setLatestResult] = useState(null)
-  const [selectedHistory, setSelectedHistory] = useState(null)
-  const [resultHistory, setResultHistory] = useState([])
-  const [recommendations, setRecommendations] = useState(null)
+  const [latestResult, setLatestResult] = useState(null);
+  const [selectedHistory, setSelectedHistory] = useState(null);
+  const [resultHistory, setResultHistory] = useState([]);
+  const [recommendations, setRecommendations] = useState(null);
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [pageSize] = useState(5)
+  const [pageLoading, setPageLoading] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    const fetchAll = async () => {
-      if (!user || isLoading) return
+  const fetchAll = async () => {
+    if (!user || isLoading) return;
 
-      try {
-        const currentUser = await authAPI.getCurrentUser()
+    try {
+      // 1. 사용자 기본 정보 확인
+      const currentUser = await authAPI.getCurrentUser();
+      console.log("✅ /auth/me 응답:", currentUser);
 
-        const resultData = await testAPI.getTestResultHistory(user.id)
-        setResultHistory(resultData)
+      // 2. 전체 테스트 결과 → 최신 성향 추출용
+      const resultData = await testAPI.getTestResultHistory(user.id); // 이름 충돌 방지
+      console.log("📦 전체 테스트 기록:", resultData);
+      setResultHistory(resultData);
 
-        if (resultData && resultData.length > 0) {
-          const sorted = resultData.sort((a, b) => b.testId - a.testId)
-          setLatestResult(sorted[0])
-        }
-
-        const historyData = await contentAPI.getMypage(user.id)
-        const sortedHistory = historyData.sort((a, b) => b.testId - a.testId)
-        setHistory(sortedHistory)
-      } catch (err) {
-        console.error("❌ 데이터 로딩 실패:", err)
-        toast({
-          title: "오류",
-          description: "마이페이지 정보를 불러오는 중 문제가 발생했습니다.",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
+      if (resultData && resultData.length > 0) {
+        const sorted = resultData.sort((a, b) => b.testId - a.testId);
+        const latest = sorted[0];
+        console.log("🎯 최신 성향 결과:", latest);
+        setLatestResult(latest);
       }
+
+
+      // 3. 전체 테스트 결과 개수를 사용해서 총 페이지 수 계산
+      const totalResults = resultData ? resultData.length : 0;
+      const calculatedTotalPages = Math.max(1, Math.ceil(totalResults / pageSize));
+      setTotalPages(calculatedTotalPages);
+      console.log(`총 ${totalResults}개 결과, ${calculatedTotalPages} 페이지`);
+
+      // 4. 추천 히스토리 목록
+      const historyData = await contentAPI.getMypage(user.id, 0, pageSize);
+      console.log("📦 마이페이지 추천 히스토리:", historyData);
+
+      if (historyData && historyData.length > 0) {
+        // testId 기준 내림차순 정렬
+        const sortedHistory = historyData.sort((a, b) => b.testId - a.testId);
+        setHistory(sortedHistory); // ✅ 추천 히스토리 저장
+      } else {
+        setHistory([]);
+      }
+
+    } catch (err) {
+      console.error("❌ 데이터 로딩 실패:", err);
+      toast({
+        title: "오류",
+        description: "마이페이지 정보를 불러오는 중 문제가 발생했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAll();
+}, [user, isLoading]);
+
+    const getTestInfoById = (testId) => {
+      return resultHistory.find(r => r.testId === testId);
     }
 
-    fetchAll()
-  }, [user, isLoading])
+  const goToPage = async (page) => {
+    if (page === currentPage || pageLoading || page < 0 || page >= totalPages) return;
 
-  const getTestInfoById = (testId) => {
-    return resultHistory.find((r) => r.testId === testId)
-  }
+    setPageLoading(true);
+    try {
+      const pageData = await contentAPI.getMypage(user.id, page, pageSize);
+
+      if (pageData && pageData.length > 0) {
+        const sortedPageData = pageData.sort((a, b) => b.testId - a.testId);
+        setHistory(sortedPageData);
+      } else {
+        setHistory([]);
+      }
+
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("페이지 로드 실패:", error);
+      toast({
+        title: "오류",
+        description: "페이지를 불러오는 중 문제가 발생했습니다.",
+        variant: "destructive",
+      });
+    } finally {
+      setPageLoading(false);
+    }
+  };
 
   const handleHistoryClick = (item) => {
-    setSelectedHistory(item)
-    setRecommendations(item.Recommend)
+    console.log("📝 상세보기 클릭됨:", item); 
+  setSelectedHistory(item);
+  setRecommendations(item.Recommend); // 이미 응답 내에 있음
+};
+
+  if (isLoading || loading) {
+    return <div className="flex justify-center items-center min-h-screen">로딩 중...</div>
+  }
+
+  if (!user) {
+    return null
   }
 
   const formatDate = (dateString) => {
@@ -73,12 +136,6 @@ export default function MyPage() {
       minute: "2-digit",
     })
   }
-
-  if (isLoading || loading) {
-    return <div className="flex justify-center items-center min-h-screen">로딩 중...</div>
-  }
-
-  if (!user) return null
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-background dark:text-foreground">
@@ -152,12 +209,50 @@ export default function MyPage() {
                           </Button>
                         </div>
                       </div>
-                    )
+                    );
                   })}
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 0 || pageLoading}
+                      >
+                        이전
+                      </Button>
+
+                      {Array.from({ length: totalPages }, (_, index) => (
+                        <Button
+                          key={index}
+                          variant={currentPage === index ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(index)}
+                          disabled={pageLoading}
+                          className={currentPage === index ? "bg-primary text-primary-foreground" : ""}
+                        >
+                          {pageLoading && currentPage === index ? "..." : index + 1}
+                        </Button>
+                      ))}
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage >= totalPages - 1 || pageLoading}
+                      >
+                        다음
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
+
+
 
           {/* 선택된 히스토리 상세 */}
           {selectedHistory && recommendations && (
@@ -175,7 +270,7 @@ export default function MyPage() {
                     <TabsTrigger value="music">🎵 음악</TabsTrigger>
                   </TabsList>
 
-                  {/* Movie */}
+                  {/*  Movie 탭 */}
                   <TabsContent value="movies" className="mt-6">
                     <div className="grid gap-4">
                       {recommendations?.Movie?.map((movie, index) => (
@@ -239,7 +334,7 @@ export default function MyPage() {
                     </div>
                   </TabsContent>
 
-                  {/* Music */}
+                  {/* Music 탭 */}
                   <TabsContent value="music" className="mt-6">
                     <div className="grid gap-4">
                       {recommendations?.Music?.map((music, index) => (
