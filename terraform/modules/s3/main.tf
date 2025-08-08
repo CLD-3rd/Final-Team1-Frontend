@@ -44,6 +44,18 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "fe" {
   }
 }
 
+resource "aws_s3_bucket_website_configuration" "my_app_website" {
+  bucket = aws_s3_bucket.my_app_bucket.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "index.html"
+  }
+}
+
 # # log bucket 생성
 # resource "aws_s3_bucket" "fe_log" {
 #   bucket = var.log_bucket_name

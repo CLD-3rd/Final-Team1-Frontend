@@ -24,6 +24,22 @@ resource "aws_cloudfront_distribution" "fe" {
   default_root_object = "index.html"
   aliases             = var.domain_names
 
+  # 오류 페이지 설정
+  custom_error_response {
+    error_code            = 403
+    response_page_path    = "/index.html"
+    response_code         = 200
+    error_caching_min_ttl = 0
+  }
+
+  custom_error_response {
+    error_code            = 404
+    response_page_path    = "/index.html"
+    response_code         = 200
+    error_caching_min_ttl = 0
+  }
+
+
   # logging_config {
   #   include_cookies = false
   #   bucket          = var.log_bucket_domain_name
