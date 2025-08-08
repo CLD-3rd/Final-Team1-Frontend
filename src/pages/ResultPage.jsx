@@ -193,8 +193,36 @@ export default function ResultPage() {
             <Button onClick={() => navigate("/test")} className="mr-4">
               다시 테스트하기
             </Button>
-            <Button variant="outline" onClick={() => navigate("/")}>
+            <Button variant="outline" onClick={() => navigate("/") } className="mr-4">
               홈으로 돌아가기
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  // 서버에서 공유 URL 가져오기
+                  const shareResponse = await testAPI.getShareUrl(testId, user?.username || "사용자");
+                  
+                  // SharedResultPage로 이동하는 URL 생성 (value 파라미터로 shareResponse 전달)
+                  const shareUrl = new URL(window.location.origin + "/shared-result");
+                  shareUrl.searchParams.set("value", shareResponse.value);
+                  
+                  await navigator.clipboard.writeText(shareUrl);
+                  toast({
+                    title: "공유 링크 복사 완료!",
+                    description: "결과 페이지 링크가 클립보드에 복사되었습니다.",
+                  });
+                } catch (err) {
+                  console.error("공유 URL 가져오기 실패:", err);
+                  toast({
+                    title: "복사 실패",
+                    description: "공유 링크를 가져오는데 실패했습니다. 다시 시도해주세요.",
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              공유하기
             </Button>
           </div>
         </div>

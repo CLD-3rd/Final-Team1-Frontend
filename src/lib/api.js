@@ -288,6 +288,30 @@ getTestResultHistory: async (userIdParam) => {
       return MOCK_RECOMMENDATIONS[key] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"];
     }
   },
+
+  // 공유 URL 가져오기
+  getShareUrl: async (testId, name) => {
+    try {
+      return await contentApiRequest(`/test/share/${testId}/${encodeURIComponent(name)}`, {
+        method: "GET",
+      });
+    } catch (error) {
+      console.log("Share URL API 호출 실패:", error);
+      throw error;
+    }
+  },
+
+  // 공유 데이터 가져오기 (value 파라미터로)
+  getSharedData: async (value) => {
+    try {
+      return await contentApiRequest(`/test/share?value=${encodeURIComponent(value)}`, {
+        method: "GET",
+      });
+    } catch (error) {
+      console.log("Shared data API 호출 실패:", error);
+      throw error;
+    }
+  },
     
 }
 
