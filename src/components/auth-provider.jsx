@@ -43,17 +43,18 @@ export function AuthProvider({ children }) {
       const response = await authAPI.login(accountId, password)
       console.log("Login response:", response) // 디버깅용
 
-      if (response.success) {
-        // 로그인 성공 후 사용자 정보 다시 조회
-        await checkAuthStatus()
-        return true
-      }
+        if (response.success && response.user) {
+            // 로그인 성공 후 사용자 정보 다시 조회
+            console.log("로그인:", response.user.username)
+            setUser(response.user)
+            return true
+        }
     } catch (error) {
       console.log("Login failed, trying test accounts...")
 
       // 백엔드가 없을 경우 테스트 계정으로 fallback
       const testAccount = TEST_ACCOUNTS.find(
-        (account) => account.username === username && account.password === password
+          (account) => account.username === accountId && account.password === password
       )
 
       if (testAccount) {
