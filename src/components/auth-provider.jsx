@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
       const response = await authAPI.login(accountId, password)
       console.log("Login response:", response) // 디버깅용
 
-        if (response.success && response.user) {
+        if (response.success && response.data?.user) {
             // 로그인 성공 후 사용자 정보 다시 조회
             console.log("로그인:", response.user.username)
             setUser(response.user)
