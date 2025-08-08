@@ -106,7 +106,7 @@ export default function SharedResultPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground dark:bg-background">
       <Header />
 
       <main className="container mx-auto px-4 py-8">
@@ -136,7 +136,7 @@ export default function SharedResultPage() {
 
           {/* 하단 절반 - 추천 컨텐츠 */}
           {resultData.recommendations && (
-            <Card>
+            <Card className="bg-white dark:bg-muted">
               <CardHeader>
                 <CardTitle className="text-2xl text-center">맞춤 추천 컨텐츠</CardTitle>
               </CardHeader>
@@ -151,7 +151,7 @@ export default function SharedResultPage() {
                   <TabsContent value="movies" className="mt-6">
                     <div className="grid gap-4">
                       {resultData.recommendations?.Movie?.map((movie, index) => (
-                        <div key={index} className="flex items-start gap-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                        <div key={index} className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm">
                           {movie.poster_path && (
                             <img
                               src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
@@ -163,13 +163,13 @@ export default function SharedResultPage() {
                             <h3 className="text-lg font-semibold">제목: {movie.title}</h3>
 
                             {movie.release_date && (
-                              <p className="text-sm text-gray-600 mt-1">
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                                 개봉일: {new Date(movie.release_date).toLocaleDateString("ko-KR")}
                               </p>
                             )}
 
                             {movie.overview && (
-                              <p className="text-sm text-gray-700 mt-2 line-clamp-4">
+                              <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 line-clamp-4">
                                 설명: {movie.overview}
                               </p>
                             )}
@@ -182,7 +182,7 @@ export default function SharedResultPage() {
                   <TabsContent value="books" className="mt-6">
                     <div className="grid gap-4">
                       {resultData.recommendations?.Book?.map((book, index) => (
-                        <div key={index} className="flex items-start gap-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                        <div key={index} className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm">
                           {book.image && (
                             <img
                               src={book.image}
@@ -192,8 +192,8 @@ export default function SharedResultPage() {
                           )}
                           <div>
                             <h3 className="text-lg font-semibold">{book.title}</h3>
-                            {book.author && <p className="text-sm text-gray-700 mt-1">저자: {book.author}</p>}
-                            {book.description && <p className="text-sm text-gray-600 mt-2">설명: {book.description}</p>}
+                            {book.author && <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">저자: {book.author}</p>}
+                            {book.description && <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">설명: {book.description}</p>}
                           </div>
                         </div>
                       ))}
@@ -203,7 +203,7 @@ export default function SharedResultPage() {
                   <TabsContent value="music" className="mt-6">
                     <div className="grid gap-4">
                       {resultData.recommendations?.Music?.map((music, index) => (
-                        <div key={index} className="flex items-start gap-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                        <div key={index} className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm">
                           {music.album && (
                             <img
                               src={music.album}
@@ -214,7 +214,7 @@ export default function SharedResultPage() {
                           <div>
                             <h3 className="text-lg font-semibold">제목: {music.title}</h3>
                             {music.artist && (
-                              <p className="text-sm text-gray-700 mt-1">아티스트: {music.artist}</p>
+                              <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">아티스트: {music.artist}</p>
                             )}
                           </div>
                         </div>
