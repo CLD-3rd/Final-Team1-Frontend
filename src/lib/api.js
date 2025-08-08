@@ -133,21 +133,20 @@ export const authAPI = {
         body: JSON.stringify({ accountId, password }),
       })
 
-      // 로그인 성공 시 바로 사용자 정보 조회
-      if (response.success) {
-        const userData = await apiRequest("/auth/me")
-        return {
-          success: true,
-          user: userData.data
+        // 로그인 성공 시 바로 사용자 정보 조회
+        if (response.success && response.data) {
+            return {
+                success: true,
+                user: response.data.user
+            }
         }
-      }
-      return response
+        return response
     } catch (error) {
-      console.error("Login failed:", error)
-      return {
-        success: false,
-        error: error.message
-      }
+        console.error("Login failed:", error)
+        return {
+            success: false,
+            error: error.message
+        }
     }
   },
 
@@ -289,6 +288,30 @@ getTestResultHistory: async (userIdParam) => {
       return MOCK_RECOMMENDATIONS[key] || MOCK_RECOMMENDATIONS["균형잡힌 분석형"];
     }
   },
+
+  // 공유 URL 가져오기
+  getShareUrl: async (testId, name) => {
+    try {
+      return await contentApiRequest(`/test/share/${testId}/${encodeURIComponent(name)}`, {
+        method: "GET",
+      });
+    } catch (error) {
+      console.log("Share URL API 호출 실패:", error);
+      throw error;
+    }
+  },
+
+  // 공유 데이터 가져오기 (value 파라미터로)
+  getSharedData: async (value) => {
+    try {
+      return await contentApiRequest(`/test/share?value=${encodeURIComponent(value)}`, {
+        method: "GET",
+      });
+    } catch (error) {
+      console.log("Shared data API 호출 실패:", error);
+      throw error;
+    }
+  },
     
 }
 
@@ -320,9 +343,9 @@ export const contentAPI = {
 },
 
 //mypage 컨텐츠 히스토리 조회 api
-getMypage: async (userId) => {
+getMypage: async (userId, page, size) => {
   try {
-    return await contentApiRequest(`/test/history?userId=${encodeURIComponent(userId)}`);
+    return await contentApiRequest(`/test/history?userId=${encodeURIComponent(userId)}&page=${page}&size=${size}`);
   } catch (error) {
     console.log("Backend API not available, using localStorage (dev mode)...");
 
