@@ -49,7 +49,7 @@ resource "aws_cloudfront_distribution" "fe" {
     }
 
     # https 리다이렉트
-    viewer_protocol_policy = "redirect-to-https"
+    viewer_protocol_policy = "allow-all"
     # 캐시 유효기간 초
     min_ttl     = 0
     default_ttl = 3600
