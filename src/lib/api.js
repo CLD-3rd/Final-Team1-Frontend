@@ -137,7 +137,9 @@ export const authAPI = {
         if (response.success && response.data) {
             return {
                 success: true,
-                user: response.data.user
+                data: {
+                    user: response.data.user
+                }
             }
         }
         return response
