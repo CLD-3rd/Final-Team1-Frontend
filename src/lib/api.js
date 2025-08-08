@@ -31,6 +31,7 @@ const apiRequest = async (endpoint, options = {}) => {
 
     // 응답의 Content-Type 헤더 확인
     const contentType = response.headers.get("content-type")
+    console.log("Response Content-Type:", contentType) // 디버깅
 
     if (!response.ok) {
       let errorMessage = response.statusText
@@ -43,6 +44,7 @@ const apiRequest = async (endpoint, options = {}) => {
 
     // 응답이 비어있거나 JSON이 아닌 경우 처리
     if (!contentType || !contentType.includes("application/json")) {
+      console.log("No JSON content-type, returning status-only response") // 디버깅
       return {
         success: true,
         status: response.status
@@ -137,9 +139,7 @@ export const authAPI = {
         if (response.success && response.data) {
             return {
                 success: true,
-                data: {
-                    user: response.data.user
-                }
+                user: response.data.user
             }
         }
         return response
