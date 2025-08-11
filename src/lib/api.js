@@ -134,15 +134,16 @@ export const authAPI = {
         method: "POST",
         body: JSON.stringify({ accountId, password }),
       })
-
-        // 로그인 성공 시 바로 사용자 정보 조회
-        if (response.success && response.data) {
-            return {
-                success: true,
-                user: response.data.user
-            }
-        }
-        return response
+        console.log("Login response:", response) // 디버깅용
+         // 로그인 성공 시 바로 사용자 정보 조회
+        if (response.success) {
+          const userData = await apiRequest("/auth/me")
+          return {
+            success: true,
+            user: userData.data
+          }
+      }
+      return response
     } catch (error) {
         console.error("Login failed:", error)
         return {
