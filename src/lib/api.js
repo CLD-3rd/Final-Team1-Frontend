@@ -295,7 +295,7 @@ getTestResultHistory: async (userIdParam) => {
   // 공유 URL 가져오기
   getShareUrl: async (testId, name) => {
     try {
-      return await contentApiRequest(`/test/share/${testId}/${encodeURIComponent(name)}`, {
+      return await contentApiRequest(`/response/share/${testId}/${encodeURIComponent(name)}`, {
         method: "GET",
       });
     } catch (error) {
@@ -307,7 +307,7 @@ getTestResultHistory: async (userIdParam) => {
   // 공유 데이터 가져오기 (value 파라미터로)
   getSharedData: async (value) => {
     try {
-      return await contentApiRequest(`/test/share?value=${encodeURIComponent(value)}`, {
+      return await contentApiRequest(`/response/share?value=${encodeURIComponent(value)}`, {
         method: "GET",
       });
     } catch (error) {
