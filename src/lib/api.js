@@ -222,6 +222,7 @@ export const authAPI = {
       throw error
     }
   },
+
 }
 
 // 테스트 관련 API (수정함)
@@ -385,8 +386,39 @@ getMypage: async (userId, page, size) => {
       console.log("Movie API 호출 실패:", error);
       throw error;
     }
+  },
+
+  // 랭킹 조회
+  getRanking: async (type, size = 3) => {
+    try {
+      const result = await contentApiRequest(`/response/ranking?type=${encodeURIComponent(type)}&size=${size}`)
+      
+      // 백엔드가 응답했지만 데이터가 없는 경우
+      if (!result || !result.Recommend) {
+        return {
+          testId: null,
+          Recommend: {
+            Book: [],
+            Music: [],
+            Movie: []
+          }
+        }
+      }
+      
+      return result
+    } catch (error) {
+      console.log("Backend API call failed:", error)
+      
+      // API 호출이 완전히 실패한 경우에만 빈 데이터 반환
+      return {
+        testId: null,
+        Recommend: {
+          Book: [],
+          Music: [],
+          Movie: []
+        }
+      }
+    }
   }
-
-
 
 }
