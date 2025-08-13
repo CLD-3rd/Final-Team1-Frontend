@@ -1,12 +1,32 @@
-import React from "react"
+import React, { useState } from "react"
 import { Link } from "react-router-dom"
 import { Button } from "../components/ui/button"
 import { Header } from "../components/header"
+import SearchDrawer from "../components/search/SearchDrawer" // ⬅️ 드로어 컴포넌트
 
 export default function HomePage() {
+  const [open, setOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <Header />
+
+      {/* 왼쪽 고정 돋보기 버튼 (홈에서만 노출) */}
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed right-5 bottom-24 z-50 w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white
+                   flex items-center justify-center shadow-lg"
+        aria-label="검색 열기"
+        title="검색"
+      >
+        {/* 돋보기 아이콘 */}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+          <path fillRule="evenodd" d="M10.5 3a7.5 7.5 0 015.916 12.195l3.194 3.195a1.125 1.125 0 01-1.59 1.59l-3.195-3.194A7.5 7.5 0 1110.5 3zm0 2.25a5.25 5.25 0 100 10.5 5.25 5.25 0 000-10.5z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {/* 검색 슬라이드 패널 */}
+      <SearchDrawer open={open} onClose={() => setOpen(false)} />
 
       <main className="container mx-auto px-4 py-16">
         <div className="text-center max-w-4xl mx-auto">

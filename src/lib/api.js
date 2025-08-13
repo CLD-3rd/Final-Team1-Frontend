@@ -5,6 +5,7 @@ const INFO_SERVER_BASE_URL = import.meta.env.VITE_INFO_SERVER_API_URL || "http:/
 
 
 import { MOCK_RECOMMENDATIONS } from "./mock-data"
+import axios from "axios";
 
 // 기본 fetch 설정
 const apiRequest = async (endpoint, options = {}) => {
@@ -390,3 +391,16 @@ getMypage: async (userId, page, size) => {
 
 
 }
+
+// 검색 api
+
+const client = axios.create({
+  baseURL: "/api", // gateway 통해 /content로 라우팅된다고 가정
+});
+
+export const searchContent = async ({ type, query }) => {
+  const { data } = await client.get("/content/search", {
+    params: { type, query },
+  });
+  return data; // List<ContentDto>
+};
