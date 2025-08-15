@@ -86,8 +86,10 @@ const contentApiRequest = async (endpoint, options = {}) => {
     const errorData = await response.json().catch(() => ({ message: response.statusText }));
     throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || "Unknown error"}`);
   }
+  const data = await response.json();  
+  console.log(`📦 [contentApiRequest] ${url} 응답:`, data);
 
-  return await response.json();
+  return data;
 };
 
 //---------------------------------------------
