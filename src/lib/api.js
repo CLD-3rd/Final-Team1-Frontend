@@ -86,10 +86,9 @@ const contentApiRequest = async (endpoint, options = {}) => {
     const errorData = await response.json().catch(() => ({ message: response.statusText }));
     throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || "Unknown error"}`);
   }
-  const data = await response.json();  
+  const data = await response.json();           
   console.log(`📦 [contentApiRequest] ${url} 응답:`, data);
-
-  return data;
+  return data;  
 };
 
 //---------------------------------------------
@@ -397,6 +396,7 @@ getMypage: async (userId, page, size) => {
   //            { content:"MUSIC", artist:"비비", title:"밤양갱" }
   const qs = new URLSearchParams(params).toString()
   // contentApiRequest는 CONTENT_SERVER_BASE_URL (기본 http://localhost:8081/api)로 요청 보냄
+  
   return await contentApiRequest(`/content/search?${qs}`, { method: "GET" })
 },
 

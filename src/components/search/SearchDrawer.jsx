@@ -1,18 +1,16 @@
 // src/components/search/SearchDrawer.jsx
-import React, { useEffect, useRef, useState } from "react";
-import { contentAPI } from "../../lib/api"; // 서버 호출 래퍼
+import React, { useEffect, useState, useRef } from "react"
+import { contentAPI  } from "../../lib/api" // axios 인스턴스 (프로젝트에 이미 있음)
+const noImage = "/no-image.png";
 
 export default function SearchDrawer({ open, onClose }) {
-  const [type, setType] = useState("movie");      // movie | book | music
-  const [q, setQ] = useState("");
-  const [artist, setArtist] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState([]);
-  const [error, setError] = useState("");
-  const [hasSearched, setHasSearched] = useState(false); // 검색 시도 여부
-
-  // 동시에 여러 검색이 겹칠 때 최신 요청만 반영하기 위한 토큰
-  const lastReqId = useRef(0);
+  const [type, setType] = useState("movie") // movie | book | music
+  const [q, setQ] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [items, setItems] = useState([])
+  const [error, setError] = useState("")
+  const [hasSearched, setHasSearched] = useState(false); 
+  const lastReqId = useRef(0); // ✅ 추가: 최신 요청 토큰
 
   useEffect(() => {
     if (!open) return;
@@ -25,17 +23,21 @@ export default function SearchDrawer({ open, onClose }) {
     setError("");
     setHasSearched(false);
     setQ("");                 // ← 검색창도 초기화
-    setArtist(type === "music" ? "" : ""); // 타입 바껴도 가수 입력 비움
     lastReqId.current++;      // 진행 중이던 검색 응답은 무시되도록 토큰 증가
   }, [type]);
 
+  const IMG_BASE = import.meta.env.VITE_TMDB_IMAGE_BASE || "https://image.tmdb.org/t/p/w342";
+
   // 프론트(type) → 백엔드(content) & 파라미터 매핑
-  const toBackendParams = (t, title, singer) => {
-    const content = t === "movie" ? "MOVIE" : t === "book" ? "BOOK" : "MUSIC";
-    if (content === "MOVIE") return { content, query: title };
-    if (content === "BOOK")  return { content, title: title };
-    return { content, artist: singer, title: title }; // MUSIC
-  };
+  const toBackendParams = (t, input) => {
+    const content =
+      t === "movie" ? "MOVIE" : t === "book" ? "BOOK" : "MUSIC"
+    if (content === "MOVIE") return { content, query: input }
+    if (content === "BOOK")  return { content, title: input }
+    // MUSIC: "제목 - 가수" 파싱
+    const { title, artist } = parseMusicQuery(input)
+    return { content, title, artist }
+  }
 
   const search = async (e) => {
     e.preventDefault();
@@ -45,33 +47,35 @@ export default function SearchDrawer({ open, onClose }) {
       setHasSearched(true);
       return;
     }
-    if (type === "music" && !artist.trim()) {
-      setError("음악 검색은 가수도 함께 입력해 주세요.");
-      setHasSearched(true);
-      return;
+     // 음악은 "제목 - 가수"가 모두 있어야 함
+    if (type === "music") {
+      const { title, artist } = parseMusicQuery(q)
+      if (!title || !artist) {
+      setError("음악 검색은 '가수 - 노래 제목' 형식으로 입력해 주세요. (예: 봄날 - 방탄소년단)")
+      return
+      }
     }
 
-    setError("");
-    setLoading(true);
-    setItems([]);
+    setError("")
+    setLoading(true)
+    setItems([])
 
-    const reqId = ++lastReqId.current; // 이 검색의 토큰
+    const reqId = ++lastReqId.current;
 
     try {
-      const params = toBackendParams(type, q.trim(), artist.trim());
-      const data = await contentAPI.search(params);
+      const params = toBackendParams(type, q.trim())
+      const data = await contentAPI.search(params)
 
-      if (lastReqId.current !== reqId) return; // 최신 요청이 아니면 무시
+      // 백엔드 응답이 items 혹은 results 배열일 수 있으니 안전하게 처리
+      const list =
+       Array.isArray(data?.items) ? data.items
+       : Array.isArray(data?.results) ? data.results
+       : Array.isArray(data?.content) ? data.content                  // 페이지네이션 형태 대비
+       : Array.isArray(data?.documents) ? data.documents              // 외부 API 프록시 대비
+       : Array.isArray(data) ? data
+       : (data ? [data] : [])                                         // 🔑 단일 객체면 감싸기
 
-      const list = Array.isArray(data?.items)
-        ? data.items
-        : Array.isArray(data?.results)
-        ? data.results
-        : Array.isArray(data)
-        ? data
-        : [];
-
-      setItems(list);
+      setItems(list)
     } catch (err) {
       if (lastReqId.current !== reqId) return;
       setError("검색 중 오류가 발생했습니다.");
@@ -84,6 +88,14 @@ export default function SearchDrawer({ open, onClose }) {
       }
     }
   };
+
+  const parseMusicQuery = (raw) => {
+  const s = (raw || "").replace(/\s{2,}/g, " ").trim()
+  // 구분자 기준으로 최대 2개만 취함
+  const parts = s.split(/\s*[-–—]\s*|\s*,\s*|\s*\|\s*/).filter(Boolean)
+  const [title, artist] = [parts[0] || "", parts[1] || ""]
+  return { title: title.trim(), artist: artist.trim() }
+  }
 
   return (
     <>
@@ -130,7 +142,11 @@ export default function SearchDrawer({ open, onClose }) {
 
             <input
               className="flex-1 px-4 py-2 rounded-xl bg-neutral-800 placeholder-neutral-400"
-              placeholder={type === "music" ? "노래 제목 (예: 밤양갱)" : "제목 입력"}
+              placeholder={
+                 type === "music"
+                   ? "노래 제목  - 가수 "
+                   : "제목 입력"
+               }
               value={q}
               onChange={(e) => setQ(e.target.value)}
               aria-label="제목"
@@ -145,16 +161,6 @@ export default function SearchDrawer({ open, onClose }) {
             </button>
           </div>
 
-          {type === "music" && (
-            <input
-              className="px-4 py-2 rounded-xl bg-neutral-800 placeholder-neutral-400"
-              placeholder="가수 (예: 비비)"
-              value={artist}
-              onChange={(e) => setArtist(e.target.value)}
-              aria-label="가수"
-            />
-          )}
-
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </form>
 
@@ -168,28 +174,59 @@ export default function SearchDrawer({ open, onClose }) {
           <ul className="grid gap-3">
             {items.map((it, idx) => (
               <li key={idx} className="rounded-xl bg-neutral-800 p-3 flex gap-3">
-                {it.image && (
-                  <img
-                    src={it.image}
-                    alt=""
-                    className="w-20 h-28 object-cover rounded-lg flex-none"
-                  />
-                )}
+                {/* 백엔드가 image 경로를 다르게 줄 수도 있으니 안전하게 접근 */}
+                  {(() => {
+                    let thumb = null;
+
+                    if (type === "music") {
+                      // 🎵 음악: 앨범 이미지가 없으면 기본 이미지
+                      thumb = it.album || noImage;
+                    } else {
+                      // 🎬 영화/📚 책: 이미지 없으면 기본 이미지
+                      thumb =
+                        it.image ||
+                        it.poster ||
+                        (it.poster_path ? `${IMG_BASE}${it.poster_path}` : null) ||
+                        noImage;
+                    }
+
+                    return (
+                      <img
+                        src={thumb}
+                        alt={it.title || it.name || ""}
+                        className="w-20 h-28 object-cover rounded-lg flex-none"
+                      />
+                    );
+                  })()}
+                {/* 영화 */}
                 <div className="min-w-0">
-                  <div className="text-xs uppercase opacity-60">
-                    {it.type || (type === "movie" ? "movie" : type)}
+                <div className="text-xs uppercase opacity-60">
+                  {it.type || (type === "movie" ? "movie" : type)}
+                </div>
+
+                <div className="font-semibold truncate">
+                  {it.title || it.name || "-"}
+                </div>
+
+
+                {it.release_date && (
+                  <div className="text-xs opacity-70 mt-0.5">
+                    {it.release_date}
+                    {/* 예쁘게: new Date(it.release_date).toLocaleDateString('ko-KR') */}
                   </div>
-                  <div className="font-semibold truncate">
-                    {it.title || it.name || "-"}
-                  </div>
+                )}
+
+                  {/* 음악 */}
                   {(it.artist || it.singer) && (
                     <div className="opacity-80">{it.artist || it.singer}</div>
                   )}
-                  {it.summary && (
-                    <p className="opacity-80 text-sm mt-1 line-clamp-3">
-                      {it.summary}
-                    </p>
-                  )}
+
+                  {/* 책 */}
+                  {it.author && (
+                  <p className="opacity-80 text-sm mt-1 line-clamp-3">
+                    {it.author}
+                  </p>
+                )}
                 </div>
               </li>
             ))}
