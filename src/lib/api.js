@@ -386,21 +386,29 @@ getMypage: async (userId, page, size) => {
       console.log("Movie API 호출 실패:", error);
       throw error;
     }
-  }
+  },
 
-
+  //검색 API
+  search: async (params) => {
+  // params 예: { content:"MOVIE", query:"인터스텔라" }
+  //            { content:"BOOK",  title:"미움받을 용기" }
+  //            { content:"MUSIC", artist:"비비", title:"밤양갱" }
+  const qs = new URLSearchParams(params).toString()
+  // contentApiRequest는 CONTENT_SERVER_BASE_URL (기본 http://localhost:8081/api)로 요청 보냄
+  return await contentApiRequest(`/content/search?${qs}`, { method: "GET" })
+},
 
 }
 
 // 검색 api
 
-const client = axios.create({
-  baseURL: "/api", // gateway 통해 /content로 라우팅된다고 가정
-});
+// const client = axios.create({
+//   baseURL: "/api", // gateway 통해 /content로 라우팅된다고 가정
+// });
 
-export const searchContent = async ({ type, query }) => {
-  const { data } = await client.get("/content/search", {
-    params: { type, query },
-  });
-  return data; // List<ContentDto>
-};
+// export const searchContent = async ({ type, query }) => {
+//   const { data } = await client.get("/content/search", {
+//     params: { type, query },
+//   });
+//   return data; // List<ContentDto>
+// };

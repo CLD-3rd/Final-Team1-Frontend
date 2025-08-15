@@ -1,6 +1,6 @@
 // src/components/search/SearchDrawer.jsx
 import React, { useEffect, useState } from "react"
-import { testAPI } from "../../lib/api" // axios 인스턴스 (프로젝트에 이미 있음)
+import { contentAPI  } from "../../lib/api" // axios 인스턴스 (프로젝트에 이미 있음)
 
 export default function SearchDrawer({ open, onClose }) {
   const [type, setType] = useState("movie") // movie | book | music
@@ -46,17 +46,15 @@ export default function SearchDrawer({ open, onClose }) {
 
     try {
       const params = toBackendParams(type, q.trim(), artist.trim())
-      const { data } = await testAPI.get("/api/content/search", { params })
+      const data = await contentAPI.search(params)
 
       // 백엔드 응답이 items 혹은 results 배열일 수 있으니 안전하게 처리
       const list =
-        Array.isArray(data?.items)
-          ? data.items
-          : Array.isArray(data?.results)
-          ? data.results
-          : Array.isArray(data)
-          ? data
-          : []
+        Array.isArray(data?.items) ? data.items
+        : Array.isArray(data?.results) ? data.results
+        : Array.isArray(data) ? data
+        : []
+      setItems(list)
 
       setItems(list)
     } catch (err) {
