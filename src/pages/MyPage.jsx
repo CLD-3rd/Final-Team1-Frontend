@@ -59,8 +59,13 @@ export default function MyPage() {
       console.log("📦 마이페이지 추천 히스토리:", historyData);
 
       if (historyData && historyData.length > 0) {
+        // 각 히스토리 항목에 createdAt 필드가 없으면 현재 시간을 추가
+        const historyWithDates = historyData.map(item => ({
+          ...item,
+          createdAt: item.createdAt || new Date().toISOString()
+        }));
         // testId 기준 내림차순 정렬
-        const sortedHistory = historyData.sort((a, b) => b.testId - a.testId);
+        const sortedHistory = historyWithDates.sort((a, b) => b.testId - a.testId);
         setHistory(sortedHistory); // ✅ 추천 히스토리 저장
       } else {
         setHistory([]);
@@ -259,7 +264,7 @@ export default function MyPage() {
             <Card className="mt-8 bg-white dark:bg-muted">
               <CardHeader>
                 <CardTitle>
-                  {selectedHistory.personality} - {formatDate(selectedHistory.completedAt)}
+                  {selectedHistory.personality} - {formatDate(selectedHistory.createdAt)}
                 </CardTitle>
               </CardHeader>
               <CardContent>
