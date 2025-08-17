@@ -264,7 +264,10 @@ export default function MyPage() {
             <Card className="mt-8 bg-white dark:bg-muted">
               <CardHeader>
                 <CardTitle>
-                  {selectedHistory.personality} - {formatDate(selectedHistory.createdAt)}
+                  {selectedHistory.personality} - {(() => {
+                    const testInfo = getTestInfoById(selectedHistory.testId);
+                    return testInfo?.createdAt ? formatDate(testInfo.createdAt) : "날짜 없음";
+                  })()}
                 </CardTitle>
               </CardHeader>
               <CardContent>
