@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { Button } from "../components/ui/button"
 import { Header } from "../components/header"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { contentAPI } from "../lib/api"
+import SearchDrawer from "../components/search/SearchDrawer" // ⬅️ 드로어 컴포넌트
 
 export default function HomePage() {
   const [open, setOpen] = useState(false)
-  import SearchDrawer from "../components/search/SearchDrawer" // ⬅️ 드로어 컴포넌트
+  
 
   // 설정 변수들
   const RANKING_SIZE = 3 // 랭킹에서 표시할 아이템 개수
@@ -99,7 +99,7 @@ export default function HomePage() {
       <button
         onClick={() => setOpen(true)}
         className="fixed right-5 bottom-24 z-50 w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white
-                   flex items-center justify-center shadow-lg"
+                  flex items-center justify-center shadow-lg"
         aria-label="검색 열기"
         title="검색"
       >
@@ -262,15 +262,13 @@ export default function HomePage() {
                                         <div className="absolute -top-2 -left-2 w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg z-10">
                                           <span className="font-bold text-xs text-white">#{index + 1}</span>
                                         </div>
-                                        {movie.poster_path && (
-                                          <div className="relative overflow-hidden rounded-lg shadow-lg group-hover/item:shadow-xl transition-shadow duration-200">
-                                            <img 
-                                              src={movie.poster_path} 
-                                              alt={movie.title}
-                                              className="w-14 h-14 object-cover transform group-hover/item:scale-105 transition-transform duration-200 flex-shrink-0"
-                                            />
-                                          </div>
-                                        )}
+                                        <div className="relative overflow-hidden rounded-lg shadow-lg group-hover/item:shadow-xl transition-shadow duration-200">
+                                          <img 
+                                            src={movie.poster_path || "/no-image.png"} 
+                                            alt={movie.title}
+                                            className="w-14 h-14 object-cover transform group-hover/item:scale-105 transition-transform duration-200 flex-shrink-0"
+                                          />
+                                        </div>
                                       </div>
                                       <div className="flex-grow min-w-0 overflow-hidden">
                                         <h4 className="font-bold text-xs text-gray-900 dark:text-white mb-1 leading-tight group-hover/item:text-purple-600 dark:group-hover/item:text-purple-400 transition-colors duration-200 truncate">{movie.title}</h4>
@@ -314,15 +312,13 @@ export default function HomePage() {
                                         <div className="absolute -top-2 -left-2 w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg z-10">
                                           <span className="font-bold text-xs text-white">#{index + 1}</span>
                                         </div>
-                                        {book.image && (
-                                          <div className="relative overflow-hidden rounded-lg shadow-lg group-hover/item:shadow-xl transition-shadow duration-200">
-                                            <img 
-                                              src={book.image} 
-                                              alt={book.title}
-                                              className="w-14 h-14 object-cover transform group-hover/item:scale-105 transition-transform duration-200 flex-shrink-0"
-                                            />
-                                          </div>
-                                        )}
+                                        <div className="relative overflow-hidden rounded-lg shadow-lg group-hover/item:shadow-xl transition-shadow duration-200">
+                                          <img 
+                                            src={book.image || "/no-image.png"} 
+                                            alt={book.title}
+                                            className="w-14 h-14 object-cover transform group-hover/item:scale-105 transition-transform duration-200 flex-shrink-0"
+                                          />
+                                        </div>
                                       </div>
                                       <div className="flex-grow min-w-0 overflow-hidden">
                                         <h4 className="font-bold text-xs text-gray-900 dark:text-white mb-1 leading-tight group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors duration-200 truncate">{book.title}</h4>
@@ -366,15 +362,13 @@ export default function HomePage() {
                                         <div className="absolute -top-2 -left-2 w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg z-10">
                                           <span className="font-bold text-xs text-white">#{index + 1}</span>
                                         </div>
-                                        {music.album && (
-                                          <div className="relative overflow-hidden rounded-xl shadow-lg group-hover/item:shadow-xl transition-shadow duration-200">
-                                            <img 
-                                              src={music.album} 
-                                              alt={music.title}
-                                              className="w-14 h-14 object-cover transform group-hover/item:scale-105 transition-transform duration-200 flex-shrink-0"
-                                            />
-                                          </div>
-                                        )}
+                                        <div className="relative overflow-hidden rounded-xl shadow-lg group-hover/item:shadow-xl transition-shadow duration-200">
+                                          <img 
+                                            src={music.album || "/no-image.png"} 
+                                            alt={music.title}
+                                            className="w-14 h-14 object-cover transform group-hover/item:scale-105 transition-transform duration-200 flex-shrink-0"
+                                          />
+                                        </div>
                                       </div>
                                       <div className="flex-grow min-w-0 overflow-hidden">
                                         <h4 className="font-bold text-xs text-gray-900 dark:text-white mb-1 leading-tight group-hover/item:text-green-600 dark:group-hover/item:text-green-400 transition-colors duration-200 truncate">{music.title}</h4>
@@ -428,23 +422,23 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row gap-6">
                 {/* 이미지 */}
                 <div className="flex-shrink-0">
-                  {selectedItem.type === 'movie' && selectedItem.poster_path && (
+                  {selectedItem.type === 'movie' && (
                     <img 
-                      src={selectedItem.poster_path} 
+                      src={selectedItem.poster_path || "/no-image.png"} 
                       alt={selectedItem.title}
                       className="w-48 h-64 object-cover rounded-lg shadow-lg mx-auto md:mx-0"
                     />
                   )}
-                  {selectedItem.type === 'book' && selectedItem.image && (
+                  {selectedItem.type === 'book' && (
                     <img 
-                      src={selectedItem.image} 
+                      src={selectedItem.image || "/no-image.png"} 
                       alt={selectedItem.title}
                       className="w-48 h-64 object-cover rounded-lg shadow-lg mx-auto md:mx-0"
                     />
                   )}
-                  {selectedItem.type === 'music' && selectedItem.album && (
+                  {selectedItem.type === 'music' && (
                     <img 
-                      src={selectedItem.album} 
+                      src={selectedItem.album || "/no-image.png"} 
                       alt={selectedItem.title}
                       className="w-48 h-48 object-cover rounded-lg shadow-lg mx-auto md:mx-0"
                     />
