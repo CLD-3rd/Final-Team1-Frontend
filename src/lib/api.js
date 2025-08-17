@@ -6,6 +6,7 @@ const INFO_SERVER_BASE_URL = import.meta.env.VITE_INFO_SERVER_API_URL || "http:/
 
 import { MOCK_RECOMMENDATIONS } from "./mock-data"
 
+
 // 기본 fetch 설정
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`
@@ -85,8 +86,9 @@ const contentApiRequest = async (endpoint, options = {}) => {
     const errorData = await response.json().catch(() => ({ message: response.statusText }));
     throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || "Unknown error"}`);
   }
-
-  return await response.json();
+  const data = await response.json();           
+  console.log(`📦 [contentApiRequest] ${url} 응답:`, data);
+  return data;  
 };
 
 //---------------------------------------------
@@ -388,6 +390,27 @@ getMypage: async (userId, page, size) => {
     }
   },
 
+
+  //검색 API
+  search: async (params) => {
+  // params 예: { content:"MOVIE", query:"인터스텔라" }
+  //            { content:"BOOK",  title:"미움받을 용기" }
+  //            { content:"MUSIC", artist:"비비", title:"밤양갱" }
+  const qs = new URLSearchParams(params).toString()
+  // contentApiRequest는 CONTENT_SERVER_BASE_URL (기본 http://localhost:8081/api)로 요청 보냄
+  
+  return await contentApiRequest(`/content/search?${qs}`, { method: "GET" })
+},
+
+}
+
+// 검색 api
+
+// const client = axios.create({
+//   baseURL: "/api", // gateway 통해 /content로 라우팅된다고 가정
+// });
+
+
   // 랭킹 조회
   getRanking: async (type, size = 3) => {
     try {
@@ -421,4 +444,10 @@ getMypage: async (userId, page, size) => {
     }
   }
 
-}
+
+// export const searchContent = async ({ type, query }) => {
+//   const { data } = await client.get("/content/search", {
+//     params: { type, query },
+//   });
+//   return data; // List<ContentDto>
+// };
