@@ -22,6 +22,7 @@ export default function HomePage() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isDiscModalOpen, setIsDiscModalOpen] = useState(false)
 
   const personalityTypes = [
     { value: "D형 (지배형)", label: "D형 (지배형)", shortLabel: "D형" },
@@ -44,6 +45,14 @@ export default function HomePage() {
   const closeModal = () => {
     setIsModalOpen(false)
     setSelectedItem(null)
+  }
+
+  const openDiscModal = () => {
+    setIsDiscModalOpen(true)
+  }
+
+  const closeDiscModal = () => {
+    setIsDiscModalOpen(false)
   }
 
   // 자동 탭 전환 기능
@@ -167,11 +176,18 @@ export default function HomePage() {
 
         {/* 성향별 인기 콘텐츠 랭킹 섹션 */}
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">성향별 인기 콘텐츠</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
               각 성향별로 가장 많이 추천받은 인기 콘텐츠를 확인해보세요
             </p>
+            <Button 
+              onClick={openDiscModal}
+              variant="outline"
+              className="px-6 py-2 text-lg border-2 border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200"
+            >
+              📊 DISC 성향이란?
+            </Button>
           </div>
 
           {loading ? (
@@ -398,7 +414,7 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* 모달 */}
+      {/* 컨텐츠 상세 모달 */}
       {isModalOpen && selectedItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeModal}>
           <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -496,6 +512,92 @@ export default function HomePage() {
                       )}
                     </>
                   )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DISC 성향 설명 모달 */}
+      {isDiscModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={closeDiscModal}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-8">
+              {/* 헤더 */}
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">📊 DISC 성향이란?</h2>
+                <button 
+                  onClick={closeDiscModal}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* 컨텐츠 */}
+              <div className="flex flex-col lg:flex-row gap-8">
+                {/* 좌측 이미지 */}
+                {/* <div className="flex-shrink-0">
+                  <div className="w-80 h-80 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 dark:from-blue-900 dark:via-purple-900 dark:to-pink-900 rounded-2xl flex items-center justify-center shadow-xl">
+                    <div className="text-center p-6">
+                      <div className="text-6xl mb-4">🧠</div>
+                      <div className="text-2xl font-bold text-gray-700 dark:text-gray-200">DISC</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300 mt-2">성향 분석 시스템</div>
+                    </div>
+                  </div>
+                </div> */}
+
+                {/* 우측 설명 */}
+                <div className="flex-grow">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">DISC란?</h3>
+                      <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                        DISC는 인간의 행동 패턴을 4가지 주요 성향으로 분류하는 성격 유형 분석 도구입니다. 
+                        각 성향은 개인의 일상적인 행동, 의사소통 방식, 그리고 의사결정 과정에서 나타나는 
+                        특징적인 패턴을 나타냅니다.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+                        <h4 className="font-bold text-red-700 dark:text-red-300 mb-2">🔥 D형 (지배형)</h4>
+                        <p className="text-sm text-red-600 dark:text-red-400">
+                          직접적이고 결단력 있는 리더십을 가진 성향. 빠른 의사결정과 목표 지향적 행동을 선호합니다.
+                        </p>
+                      </div>
+
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                        <h4 className="font-bold text-yellow-700 dark:text-yellow-300 mb-2">⭐ I형 (사교형)</h4>
+                        <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                          낙관적이고 사교적인 성향. 사람들과의 상호작용을 즐기며 창의적이고 영감을 주는 특성이 있습니다.
+                        </p>
+                      </div>
+
+                      <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                        <h4 className="font-bold text-green-700 dark:text-green-300 mb-2">🌱 S형 (안정형)</h4>
+                        <p className="text-sm text-green-600 dark:text-green-400">
+                          안정적이고 협조적인 성향. 팀워크를 중시하며 신뢰할 수 있고 일관성 있는 행동을 보입니다.
+                        </p>
+                      </div>
+
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-bold text-blue-700 dark:text-blue-300 mb-2">🔍 C형 (신중형)</h4>
+                        <p className="text-sm text-blue-600 dark:text-blue-400">
+                          체계적이고 정확한 성향. 논리적 사고와 품질을 중시하며 세부사항에 주의를 기울입니다.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                      <h4 className="font-bold text-indigo-700 dark:text-indigo-300 mb-2">💡 DISC의 활용</h4>
+                      <p className="text-sm text-indigo-600 dark:text-indigo-400">
+                        DISC 성향 분석을 통해 자신의 강점과 약점을 파악하고, 더 나은 의사소통과 관계 형성을 도모할 수 있습니다. 
+                        또한 개인에게 맞는 컨텐츠와 활동을 추천받아 더욱 만족스러운 삶을 살 수 있도록 도와줍니다.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
