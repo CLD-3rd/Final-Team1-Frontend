@@ -402,16 +402,8 @@ getMypage: async (userId, page, size) => {
   return await contentApiRequest(`/content/search?${qs}`, { method: "GET" })
 },
 
-}
 
-// 검색 api
-
-// const client = axios.create({
-//   baseURL: "/api", // gateway 통해 /content로 라우팅된다고 가정
-// });
-
-
-  // 랭킹 조회
+ // 랭킹 조회
   getRanking: async (type, size = 3) => {
     try {
       const result = await contentApiRequest(`/response/ranking?type=${encodeURIComponent(type)}&size=${size}`)
@@ -443,6 +435,17 @@ getMypage: async (userId, page, size) => {
       }
     }
   }
+
+}
+
+// 검색 api
+
+// const client = axios.create({
+//   baseURL: "/api", // gateway 통해 /content로 라우팅된다고 가정
+// });
+
+
+
 
 
 // export const searchContent = async ({ type, query }) => {
