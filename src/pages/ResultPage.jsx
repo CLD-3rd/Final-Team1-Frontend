@@ -102,13 +102,14 @@ export default function ResultPage() {
                         key={index}
                         className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm"
                       >
-                        {movie.poster_path && (
-                          <img
-                            src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
-                            alt={movie.title}
-                            className="w-24 h-36 object-cover rounded-md"
-                          />
-                        )}
+                        <img
+                          src={movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : "/no-image.png"}
+                          alt={movie.title}
+                          className="w-24 h-36 object-cover rounded-md"
+                          onError={(e) => {
+                            e.target.src = "/no-image.png";
+                          }}
+                        />
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold">제목: {movie.title}</h3>
                           {movie.release_date && (
@@ -135,13 +136,14 @@ export default function ResultPage() {
                         key={index}
                         className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm"
                       >
-                        {book.image && (
-                          <img
-                            src={book.image}
-                            alt={book.title}
-                            className="w-24 h-36 object-cover rounded-md"
-                          />
-                        )}
+                        <img
+                          src={book.image || "/no-image.png"}
+                          alt={book.title}
+                          className="w-24 h-36 object-cover rounded-md"
+                          onError={(e) => {
+                            e.target.src = "/no-image.png";
+                          }}
+                        />
                         <div>
                           <h3 className="text-lg font-semibold">{book.title}</h3>
                           {book.author && (
@@ -166,13 +168,14 @@ export default function ResultPage() {
                         key={index}
                         className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm"
                       >
-                        {music.album && (
-                          <img
-                            src={music.album}
-                            alt={music.title}
-                            className="w-24 h-24 object-cover rounded-md"
-                          />
-                        )}
+                        <img
+                          src={music.album || "/no-image.png"}
+                          alt={music.title}
+                          className="w-24 h-24 object-cover rounded-md"
+                          onError={(e) => {
+                            e.target.src = "/no-image.png";
+                          }}
+                        />
                         <div>
                           <h3 className="text-lg font-semibold">제목: {music.title}</h3>
                           {music.artist && (
