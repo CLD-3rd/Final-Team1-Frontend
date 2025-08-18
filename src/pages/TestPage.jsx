@@ -60,6 +60,13 @@ export default function TestPage() {
       ...prev,
       [questionIndex]: Number.parseInt(value),
     }))
+    
+    // 답변을 선택하면 자동으로 다음 문항으로 이동
+    if (questionIndex < questions.length - 1) {
+      setTimeout(() => {
+        setCurrentQuestion((prev) => prev + 1)
+      }, 300) // 300ms 후 다음 문항으로 이동 (사용자가 선택을 확인할 수 있도록)
+    }
   }
 
   const handleNext = () => {
@@ -180,13 +187,9 @@ export default function TestPage() {
               이전
             </Button>
 
-            {currentQuestion === questions.length - 1 ? (
+            {currentQuestion === questions.length - 1 && (
               <Button onClick={handleSubmit} disabled={!allAnswered || isSubmitting}>
                 {isSubmitting ? "결과 저장 중..." : "결과 확인하기"}
-              </Button>
-            ) : (
-              <Button onClick={handleNext} disabled={!isAnswered}>
-                다음
               </Button>
             )}
           </div>
