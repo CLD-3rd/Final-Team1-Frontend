@@ -133,7 +133,7 @@ export default function MyPage() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
-    return date.toLocaleString("ko-KR", {
+    return date.toLocaleString("", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
