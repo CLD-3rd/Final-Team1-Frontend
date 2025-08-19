@@ -10,6 +10,7 @@ import { Button } from "../components/ui/button" // 상대 경로로 변경
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs" // 상대 경로로 변경
 import { testAPI, authAPI,contentAPI } from "../lib/api" // 상대 경로로 변경
 import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
+import { formatToKST, formatDateToKST } from "../lib/utils"
 
 export default function MyPage() {
   const { user, isLoading } = useAuth()
@@ -132,15 +133,7 @@ export default function MyPage() {
   }
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    console.log("📅 날짜 포맷팅:", dateString, "->", date);
-    return date.toLocaleString("ko-KR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+    return formatToKST(dateString)
   }
 
   return (

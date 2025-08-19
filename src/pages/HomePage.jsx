@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button"
 import { Header } from "../components/header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { contentAPI } from "../lib/api"
+import { formatDateToKST } from "../lib/utils"
 import SearchDrawer from "../components/search/SearchDrawer" // ⬅️ 드로어 컴포넌트
 
 export default function HomePage() {
@@ -469,7 +470,7 @@ export default function HomePage() {
                     <>
                       {selectedItem.release_date && (
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                          <span className="font-medium">개봉일:</span> {new Date(selectedItem.release_date).toLocaleDateString()}
+                          <span className="font-medium">개봉일:</span> {formatDateToKST(selectedItem.release_date)}
                         </p>
                       )}
                       {selectedItem.overview && (
