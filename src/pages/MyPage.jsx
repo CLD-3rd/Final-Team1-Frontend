@@ -133,7 +133,8 @@ export default function MyPage() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
-    return date.toLocaleString({
+    console.log("📅 날짜 포맷팅:", dateString, "->", date);
+    return date.toLocaleString("ko-KR", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
