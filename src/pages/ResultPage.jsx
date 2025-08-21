@@ -1,102 +1,88 @@
 "use client"
 
-import React from 'react'
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom" // useNavigate 임포트
-import { useAuth } from "../components/auth-provider" // 상대 경로로 변경
-import { Header } from "../components/header" // 상대 경로로 변경
-import { Button } from "../components/ui/button" // 상대 경로로 변경
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card" // 상대 경로로 변경
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs" // 상대 경로로 변경
-import { testAPI } from "../lib/api" // 상대 경로로 변경
-import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
+import React, { useState, useEffect } from "react"
+import { useSearchParams, useNavigate } from "react-router-dom"
+import { useAuth } from "../components/auth-provider"
+import { Header } from "../components/header"
+import { Button } from "../components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { testAPI, contentAPI } from "../lib/api"
+import { useToast } from "../hooks/use-toast"
 
 export default function ResultPage() {
   const { user, isLoading } = useAuth()
-  const navigate = useNavigate() // useRouter 대신 useNavigate 사용
-  const [testResult, setTestResult] = useState(null)
+  const navigate = useNavigate()
+  const [latestResult, setLatestResult] = useState(null)
+  const [testDetail, setTestDetail] = useState(null)
   const [recommendations, setRecommendations] = useState(null)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+  const [searchParams] = useSearchParams()
+  const testId = searchParams.get("testId")
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      navigate("/login") // router.push 대신 navigate 사용
-      return
-    }
+    const fetchBoth = async () => {
+      if (!user || isLoading) return
 
-    if (user) {
-      fetchLatestResult()
-    }
-  }, [user, isLoading, navigate]) // 의존성 배열에 navigate 추가
+      try {
+        if (testId) {
+          const res = await contentAPI.getTestHistory(testId)
+          setTestDetail(res)
+          setRecommendations(res.Recommend)
+        }
 
-  const fetchLatestResult = async () => {
-    try {
-      // 백엔드에서 최신 테스트 결과 조회
-      const history = await testAPI.getTestHistory()
-
-      if (history.length === 0) {
-        navigate("/test") // navigate 사용
-        return
+        const history = await testAPI.getTestResultHistory(user.id)
+        if (history && history.length > 0) {
+          const sorted = history.sort((a, b) => b.testId - a.testId)
+          setLatestResult(sorted[0])
+        }
+      } catch (error) {
+        toast({
+          title: "오류",
+          description: "결과를 불러오는 중 문제가 발생했습니다.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
       }
-
-      const latestResult = history[0] // 최신 결과
-      setTestResult(latestResult)
-
-      // 성향에 따른 추천 컨텐츠 조회
-      const recs = await testAPI.getRecommendations(latestResult.personality)
-      setRecommendations(recs)
-    } catch (error) {
-      console.error("Failed to fetch test result:", error)
-      toast({
-        title: "오류",
-        description: "테스트 결과를 불러오는 중 오류가 발생했습니다.",
-        variant: "destructive",
-      })
-      navigate("/test") // navigate 사용
-    } finally {
-      setLoading(false)
     }
-  }
+
+    fetchBoth()
+  }, [user, isLoading, testId])
 
   if (isLoading || loading) {
     return <div className="flex justify-center items-center min-h-screen">로딩 중...</div>
   }
 
-  if (!user || !testResult || !recommendations) {
-    return null
-  }
+  if (!user || !recommendations) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground dark:bg-background">
       <Header />
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* 상단 절반 - 성향 결과 */}
+          {/* 상단 - 성향 결과 */}
           <div className="h-96 mb-8">
             <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white h-full">
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl mb-4">테스트 결과</CardTitle>
                 <div className="text-6xl mb-4">🎯</div>
-                <h2 className="text-4xl font-bold mb-4">{testResult.personality}</h2>
-                <p className="text-xl opacity-90">평균 점수: {testResult.score.toFixed(1)}점</p>
+                <h2 className="text-4xl font-bold mb-4">
+                  {latestResult?.userType || "성향 없음"}
+                </h2>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-lg opacity-90 mb-6">
-                  {testResult.personality === "외향적 리더형" &&
-                    "당신은 사교적이고 리더십이 뛰어난 성향입니다. 새로운 도전을 즐기고 팀을 이끄는 것을 좋아합니다."}
-                  {testResult.personality === "균형잡힌 분석형" &&
-                    "당신은 논리적이면서도 감정적 균형을 잘 맞추는 성향입니다. 신중하게 판단하고 합리적인 결정을 내립니다."}
-                  {testResult.personality === "신중한 사색형" &&
-                    "당신은 깊이 있게 생각하고 신중한 성향입니다. 혼자만의 시간을 소중히 여기고 내면의 성찰을 중요하게 생각합니다."}
+                  {latestResult?.typeDescription || "설명 없음"}
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* 하단 절반 - 추천 컨텐츠 */}
-          <Card>
+          {/* 하단 - 추천 콘텐츠 */}
+          <Card className="bg-white dark:bg-muted">
             <CardHeader>
               <CardTitle className="text-2xl text-center">맞춤 추천 컨텐츠</CardTitle>
             </CardHeader>
@@ -108,36 +94,96 @@ export default function ResultPage() {
                   <TabsTrigger value="music">🎵 음악</TabsTrigger>
                 </TabsList>
 
+                {/* 영화 */}
                 <TabsContent value="movies" className="mt-6">
                   <div className="grid gap-4">
-                    {recommendations.movies?.map((movie, index) => (
-                      <div key={index} className="p-4 bg-gray-100 rounded-lg">
-                        <h3 className="font-semibold">{movie.title}</h3>
-                        {movie.description && <p className="text-sm text-gray-600 mt-1">{movie.description}</p>}
+                    {recommendations?.Movie?.map((movie, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm"
+                      >
+                        <img
+                          src={movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : "/no-image.png"}
+                          alt={movie.title}
+                          className="w-24 h-36 object-cover rounded-md"
+                          onError={(e) => {
+                            e.target.src = "/no-image.png";
+                          }}
+                        />
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold">제목: {movie.title}</h3>
+                          {movie.release_date && (
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                              개봉일: {new Date(movie.release_date).toLocaleDateString("ko-KR")}
+                            </p>
+                          )}
+                          {movie.overview && (
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 line-clamp-4">
+                              설명: {movie.overview}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </TabsContent>
 
+                {/* 책 */}
                 <TabsContent value="books" className="mt-6">
                   <div className="grid gap-4">
-                    {recommendations.books?.map((book, index) => (
-                      <div key={index} className="p-4 bg-gray-100 rounded-lg">
-                        <h3 className="font-semibold">{book.title}</h3>
-                        {book.author && <p className="text-sm text-gray-600 mt-1">저자: {book.author}</p>}
-                        {book.description && <p className="text-sm text-gray-600 mt-1">{book.description}</p>}
+                    {recommendations?.Book?.map((book, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm"
+                      >
+                        <img
+                          src={book.image || "/no-image.png"}
+                          alt={book.title}
+                          className="w-24 h-36 object-cover rounded-md"
+                          onError={(e) => {
+                            e.target.src = "/no-image.png";
+                          }}
+                        />
+                        <div>
+                          <h3 className="text-lg font-semibold">{book.title}</h3>
+                          {book.author && (
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">저자: {book.author}</p>
+                          )}
+                          {book.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                              설명: {book.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </TabsContent>
 
+                {/* 음악 */}
                 <TabsContent value="music" className="mt-6">
                   <div className="grid gap-4">
-                    {recommendations.music?.map((artist, index) => (
-                      <div key={index} className="p-4 bg-gray-100 rounded-lg">
-                        <h3 className="font-semibold">{artist.name}</h3>
-                        {artist.genre && <p className="text-sm text-gray-600 mt-1">장르: {artist.genre}</p>}
-                        {artist.description && <p className="text-sm text-gray-600 mt-1">{artist.description}</p>}
+                    {recommendations?.Music?.map((music, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-4 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-sm"
+                      >
+                        <img
+                          src={music.album || "/no-image.png"}
+                          alt={music.title}
+                          className="w-24 h-24 object-cover rounded-md"
+                          onError={(e) => {
+                            e.target.src = "/no-image.png";
+                          }}
+                        />
+                        <div>
+                          <h3 className="text-lg font-semibold">제목: {music.title}</h3>
+                          {music.artist && (
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                              아티스트: {music.artist}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -150,8 +196,36 @@ export default function ResultPage() {
             <Button onClick={() => navigate("/test")} className="mr-4">
               다시 테스트하기
             </Button>
-            <Button variant="outline" onClick={() => navigate("/")}>
+            <Button variant="outline" onClick={() => navigate("/") } className="mr-4">
               홈으로 돌아가기
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  // 서버에서 공유 URL 가져오기
+                  const shareResponse = await testAPI.getShareUrl(testId, user?.username || "사용자");
+                  
+                  // SharedResultPage로 이동하는 URL 생성 (value 파라미터로 shareResponse 전달)
+                  const shareUrl = new URL(window.location.origin + "/shared-result");
+                  shareUrl.searchParams.set("value", shareResponse.value);
+                  
+                  await navigator.clipboard.writeText(shareUrl);
+                  toast({
+                    title: "공유 링크 복사 완료!",
+                    description: "결과 페이지 링크가 클립보드에 복사되었습니다.",
+                  });
+                } catch (err) {
+                  console.error("공유 URL 가져오기 실패:", err);
+                  toast({
+                    title: "복사 실패",
+                    description: "공유 링크를 가져오는데 실패했습니다. 다시 시도해주세요.",
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              공유하기
             </Button>
           </div>
         </div>

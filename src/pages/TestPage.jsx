@@ -1,17 +1,16 @@
 "use client"
 
-import React from 'react'
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom" // useNavigate 임포트
-import { useAuth } from "../components/auth-provider" // 상대 경로로 변경
-import { Header } from "../components/header" // 상대 경로로 변경
-import { Button } from "../components/ui/button" // 상대 경로로 변경
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card" // 상대 경로로 변경
-import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group" // 상대 경로로 변경
-import { Label } from "../components/ui/label" // 상대 경로로 변경
-import { Progress } from "../components/ui/progress" // 상대 경로로 변경
-import { testAPI } from "../lib/api" // 상대 경로로 변경
-import { useToast } from "../hooks/use-toast" // 상대 경로로 변경
+import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../components/auth-provider"
+import { Header } from "../components/header"
+import { Button } from "../components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group"
+import { Label } from "../components/ui/label"
+import { Progress } from "../components/ui/progress"
+import { testAPI, contentAPI } from "../lib/api"
+import { useToast } from "../hooks/use-toast"
 
 const questions = [
   "나는 새로운 사람들과 만나는 것을 좋아한다",
@@ -38,7 +37,7 @@ const questions = [
 
 export default function TestPage() {
   const { user, isLoading } = useAuth()
-  const navigate = useNavigate() // useRouter 대신 useNavigate 사용
+  const navigate = useNavigate()
   const [answers, setAnswers] = useState({})
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,23 +45,28 @@ export default function TestPage() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate("/login") // router.push 대신 navigate 사용
+      navigate("/login")
     }
-  }, [user, isLoading, navigate]) // 의존성 배열에 navigate 추가
+  }, [user, isLoading, navigate])
 
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">로딩 중...</div>
   }
 
-  if (!user) {
-    return null
-  }
+  if (!user) return null
 
   const handleAnswerChange = (questionIndex, value) => {
     setAnswers((prev) => ({
       ...prev,
       [questionIndex]: Number.parseInt(value),
     }))
+    
+    // 답변을 선택하면 자동으로 다음 문항으로 이동
+    if (questionIndex < questions.length - 1) {
+      setTimeout(() => {
+        setCurrentQuestion((prev) => prev + 1)
+      }, 300) // 300ms 후 다음 문항으로 이동 (사용자가 선택을 확인할 수 있도록)
+    }
   }
 
   const handleNext = () => {
@@ -81,31 +85,41 @@ export default function TestPage() {
     setIsSubmitting(true)
 
     try {
-      // 점수 계산 로직
       const totalScore = Object.values(answers).reduce((sum, score) => sum + score, 0)
       const averageScore = totalScore / questions.length
 
       let personality = ""
+      let typeDescription = ""
+
       if (averageScore >= 4) {
-        personality = "외향적 리더형"
+        personality = "D형 (지배형)"
+        typeDescription = "당신은 도전적이고 리더십이 강한 D형입니다!"
       } else if (averageScore >= 3) {
-        personality = "균형잡힌 분석형"
+        personality = "I형 (사교형)"
+        typeDescription = "당신은 활발하고 사람을 좋아하는 I형입니다!"
+      } else if (averageScore >= 2) {
+        personality = "S형 (안정형)"
+        typeDescription = "당신은 따뜻하고 성실한 S형입니다!"
       } else {
-        personality = "신중한 사색형"
+        personality = "C형 (신중형)"
+        typeDescription = "당신은 분석적이고 꼼꼼한 C형입니다!"
       }
 
-      // 백엔드에 테스트 결과 저장
       const testResult = {
-        personality,
-        score: averageScore,
-        answers,
+        userId: user.id,
+        userType: personality,
+        typeDescription: typeDescription,
         completedAt: new Date().toISOString(),
       }
 
-      await testAPI.saveTestResult(testResult)
+      const response = await testAPI.saveTestResult(testResult)
+      const testId = response.testId
+      await contentAPI.requestRecommendation(testId)
+      await contentAPI.bookRecommendation(testId)
+      await contentAPI.musicRecommendation(testId)
+      await contentAPI.movieRecommendation(testId)
 
-      // 결과 페이지로 이동 (결과는 백엔드에서 조회)
-      navigate("/result") // router.push 대신 navigate 사용
+      navigate(`/result?testId=${testId}`)
 
       toast({
         title: "테스트 완료",
@@ -128,7 +142,7 @@ export default function TestPage() {
   const allAnswered = questions.every((_, index) => answers[index] !== undefined)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground dark:bg-background">
       <Header />
 
       <main className="container mx-auto px-4 py-8">
@@ -136,42 +150,34 @@ export default function TestPage() {
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-2xl font-bold">성향 테스트</h1>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground dark:text-gray-300">
                 {currentQuestion + 1} / {questions.length}
               </span>
             </div>
             <Progress value={progress} className="w-full" />
           </div>
 
-          <Card>
+          <Card className="bg-white dark:bg-muted">
             <CardHeader>
-              <CardTitle className="text-lg">{questions[currentQuestion]}</CardTitle>
+              <CardTitle className="text-lg dark:text-white">{questions[currentQuestion]}</CardTitle>
             </CardHeader>
             <CardContent>
               <RadioGroup
                 value={answers[currentQuestion]?.toString() || ""}
                 onValueChange={(value) => handleAnswerChange(currentQuestion, value)}
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="5" id="5" />
-                  <Label htmlFor="5">매우 그렇다 (5점)</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="4" id="4" />
-                  <Label htmlFor="4">그렇다 (4점)</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="3" id="3" />
-                  <Label htmlFor="3">보통이다 (3점)</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="2" id="2" />
-                  <Label htmlFor="2">아니다 (2점)</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="1" id="1" />
-                  <Label htmlFor="1">매우 아니다 (1점)</Label>
-                </div>
+                {[5, 4, 3, 2, 1].map((val) => (
+                  <div key={val} className="flex items-center space-x-2">
+                    <RadioGroupItem value={val.toString()} id={val.toString()} />
+                    <Label htmlFor={val.toString()} className="dark:text-gray-300">
+                      {val === 5 && "매우 그렇다 (5점)"}
+                      {val === 4 && "그렇다 (4점)"}
+                      {val === 3 && "보통이다 (3점)"}
+                      {val === 2 && "아니다 (2점)"}
+                      {val === 1 && "매우 아니다 (1점)"}
+                    </Label>
+                  </div>
+                ))}
               </RadioGroup>
             </CardContent>
           </Card>
@@ -181,13 +187,9 @@ export default function TestPage() {
               이전
             </Button>
 
-            {currentQuestion === questions.length - 1 ? (
+            {currentQuestion === questions.length - 1 && (
               <Button onClick={handleSubmit} disabled={!allAnswered || isSubmitting}>
                 {isSubmitting ? "결과 저장 중..." : "결과 확인하기"}
-              </Button>
-            ) : (
-              <Button onClick={handleNext} disabled={!isAnswered}>
-                다음
               </Button>
             )}
           </div>
